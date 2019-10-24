@@ -10,3 +10,27 @@
 
 # Output of the go coverage tool, specifically when used with LiteIDE
 *.out
+
+*~
+*.swp
+*.a
+*.jar
+*.iml
+/.idea
+/.vscode
+/output*
+/**/*.zip
+/**/.DS_Store
+/**/libexec
+/**/*.db
+/**/*.db.lock
+/**/*.pyc
+/**/*debug.test
+/**/debug
+/**/*.log
+/cover*.out
+/example/**/*-cert
+/**/processes.history*
+/**/node_modules
+/**/__package
+docs/_build
