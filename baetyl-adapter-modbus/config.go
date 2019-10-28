@@ -4,18 +4,16 @@ import "time"
 
 // Config custom configuration of the timer module
 type Config struct {
-	// slave list
-	Slaves []Slave `yaml:"slaves" json:"slaves"`
-	// parse item list
-	ParseItems []ParseItem `yaml:"parse_items" json:"parse_items"`
+	// slave.go list
+	Slaves []SlaveItem `yaml:"slaves" json:"slaves"`
+	// map list
+	Tables []MapItem `yaml:"tables" json:"tables"`
 	// publish topic of collected data
-	Publish *Publish `yaml:"publish" json:"publish"`
-	// msg buffer size
-	MsgBufferSize int `yaml:"msg_buffer_size" json:"msg_buffer_size" default:"1000" validate:"min=1"`
+	Publish *Publish `yaml:"publish" json:"publish" validate:"nonnil"`
 }
 
-// Slave modbus slave device configuration
-type Slave struct {
+// SlaveItem modbus slave device configuration
+type SlaveItem struct {
 	ID byte `yaml:"id" json:"id"`
 	// Address Device path (/dev/ttyS0)
 	Address string `yaml:"address" json:"address" default:"/dev/ttyS0"`
@@ -23,7 +21,6 @@ type Slave struct {
 	Timeout time.Duration `yaml:"timeout" json:"timeout" default:"10s"`
 	// IdleTimeout Idle timeout to close the connection
 	IdleTimeout time.Duration `yaml:"idletimeout" json:"idletimeout" default:"1m"`
-
 	//// RTU only
 	// BaudRate (default 19200)
 	BaudRate int `yaml:"baudrate" json:"baudrate" default:"19200"`
@@ -47,30 +44,21 @@ type Slave struct {
 		// RtsHighAfterSend Set RTS high after send
 		RtsHighAfterSend bool `yaml:"rts_high_after_send" json:"rts_high_after_send"`
 		// RxDuringTx Rx during Tx
-		RxDuringTx bool `yaml:"Rx_during_tx" json:"Rx_during_tx"`
+		RxDuringTx bool `yaml:"rx_during_tx" json:"rx_during_tx"`
 	} `yaml:"rs485" json:"rs485"`
 	Interval time.Duration `yaml:"interval" json:"interval" default:"5s" validate:"nonzero"`
-	// publish topic of collected data
-	Publish *Publish `yaml:"publish" json:"publish"`
 }
 
-// ParseItem parse Item configuration
-type ParseItem struct {
+// MapItem collect item configuration
+type MapItem struct {
 	// Slave Id
-	SlaveID byte `yaml:"slave_id" json:"slave_id"`
+	SlaveID byte `yaml:"slaveid" json:"slaveid"`
 	// Function
-	Function byte `yaml:"function" json:"function"`
+	Function byte `yaml:"function" json:"function" validate:"min=1, max=4"`
 	// Address
 	Address uint16 `yaml:"address" json:"address"`
 	// Quantity
 	Quantity uint16 `yaml:"quantity" json:"quantity"`
-	// Interval
-	Interval time.Duration `yaml:"interval" json:"interval"`
-	// Name
-	Name string `yaml:"name" json:"name"`
-	// Data Type
-	Type string `yaml:"type" json:"type"`
-
 }
 
 // Publish publish topic
