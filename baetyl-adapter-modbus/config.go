@@ -5,15 +5,15 @@ import "time"
 // Config custom configuration of the timer module
 type Config struct {
 	// slave.go list
-	Slaves []SlaveItem `yaml:"slaves" json:"slaves"`
+	Slaves []SlaveConfig `yaml:"slaves" json:"slaves"`
 	// map list
-	Tables []MapItem `yaml:"tables" json:"tables"`
+	Maps []MapConfig `yaml:"maps" json:"maps"`
 	// publish topic of collected data
-	Publish *Publish `yaml:"publish" json:"publish" validate:"nonnil"`
+	Publish Publish `yaml:"publish" json:"publish" validate:"nonnil"`
 }
 
-// SlaveItem modbus slave device configuration
-type SlaveItem struct {
+// SlaveConfig modbus slave device configuration
+type SlaveConfig struct {
 	ID byte `yaml:"id" json:"id"`
 	// Address Device path (/dev/ttyS0)
 	Address string `yaml:"address" json:"address" default:"/dev/ttyS0"`
@@ -25,12 +25,12 @@ type SlaveItem struct {
 	// BaudRate (default 19200)
 	BaudRate int `yaml:"baudrate" json:"baudrate" default:"19200"`
 	// DataBits: 5, 6, 7 or 8 (default 8)
-	DataBits int `yaml:"databits" json:"databits" default:"8"`
+	DataBits int `yaml:"databits" json:"databits" default:"8" validate:"min=5, max=8"`
 	// StopBits: 1 or 2 (default 1)
-	StopBits int `yaml:"stopbits" json:"stopbits" default:"1"`
+	StopBits int `yaml:"stopbits" json:"stopbits" default:"1" validate:"min=1, max=2"`
 	// Parity: N - None, E - Even, O - Odd (default E)
 	// (The use of no parity requires 2 stop bits.)
-	Parity string `yaml:"parity" json:"parity" default:"E"`
+	Parity string `yaml:"parity" json:"parity" default:"E" validate:"regexp=^(E|N|O)?$"`
 	// RS485 Configuration related to RS485
 	RS485 struct {
 		// Enabled Enable RS485 support
@@ -49,8 +49,8 @@ type SlaveItem struct {
 	Interval time.Duration `yaml:"interval" json:"interval" default:"5s" validate:"nonzero"`
 }
 
-// MapItem collect item configuration
-type MapItem struct {
+// MapConfig map point configuration
+type MapConfig struct {
 	// Slave Id
 	SlaveID byte `yaml:"slaveid" json:"slaveid"`
 	// Function

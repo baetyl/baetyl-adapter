@@ -2,10 +2,10 @@ package main
 
 type Slave struct {
 	client *MbClient
-	cfg    SlaveItem
+	cfg    SlaveConfig
 }
 
-func NewSlave(item SlaveItem, client *MbClient) *Slave {
+func NewSlave(item SlaveConfig, client *MbClient) *Slave {
 	return &Slave{
 		client: client,
 		cfg:    item,

@@ -12,6 +12,8 @@ PLATFORM_ALL:=darwin/amd64 linux/amd64 linux/arm64 linux/386 linux/arm/v7
 GIT_TAG:=$(shell git tag --contains HEAD)
 GIT_REV:=git-$(shell git rev-parse --short HEAD)
 VERSION:=$(if $(GIT_TAG),$(GIT_TAG),$(GIT_REV))
+GO_TEST_FLAGS?=
+GO_TEST_PKGS?=$(shell go list ./...)
 
 ifndef PLATFORMS
 	GO_OS:=$(shell go env GOOS)
@@ -62,5 +64,10 @@ rebuild: clean all
 .PHONY: clean
 clean:
 	@find $(OUTPUT) -type d -name $(MODULE) | xargs rm -rf
+
+.PHONY: test
+test:
+	@go test ${GO_TEST_FLAGS} -coverprofile=coverage.out ${GO_TEST_PKGS}
+	@go tool cover -func=coverage.out | grep total
 
 

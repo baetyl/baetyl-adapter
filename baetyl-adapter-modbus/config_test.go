@@ -16,7 +16,7 @@ slaves:
   - id: 1
     address: tcp://127.0.0.1:502
     interval: 3s
-tables:
+maps:
   - slaveid: 1
     address: 0
     quantity: 1
@@ -30,7 +30,7 @@ publish:
 	var cfg Config
 	utils.LoadYAML(filepath.Join(dir, fileName), &cfg)
 	cfg2 := Config{
-		Slaves: []SlaveItem{
+		Slaves: []SlaveConfig{
 			{
 				ID:          1,
 				Address:     "tcp://127.0.0.1:502",
@@ -43,7 +43,7 @@ publish:
 				Parity:      "E",
 			},
 		},
-		Tables: []MapItem{
+		Maps: []MapConfig{
 			{
 				SlaveID:  1,
 				Address:  0,
@@ -51,7 +51,7 @@ publish:
 				Function: 3,
 			},
 		},
-		Publish: &Publish{
+		Publish: Publish{
 			QOS:   0,
 			Topic: "test",
 		},

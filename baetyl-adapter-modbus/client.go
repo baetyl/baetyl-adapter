@@ -2,10 +2,9 @@ package main
 
 import (
 	"fmt"
-	"strings"
-
 	"github.com/goburrow/modbus"
 	"github.com/goburrow/serial"
+	"strings"
 )
 
 type handler interface {
@@ -19,24 +18,7 @@ type MbClient struct {
 	handler
 }
 
-func (m *MbClient) Connect() error {
-	err := m.handler.Connect()
-	if err != nil {
-		return fmt.Errorf("failed to connect: %s", err.Error())
-	}
-	m.Client = modbus.NewClient(m.handler)
-	return nil
-}
-
-func (m *MbClient) Close() error {
-	err := m.handler.Close()
-	if err != nil {
-		return fmt.Errorf("failed to close tcp client: %s", err.Error())
-	}
-	return nil
-}
-
-func NewClient(cfg SlaveItem) *MbClient {
+func NewClient(cfg SlaveConfig) *MbClient {
 	var cli MbClient
 	if strings.HasPrefix(cfg.Address, "tcp://") {
 		// Modbus TCP
@@ -66,4 +48,21 @@ func NewClient(cfg SlaveItem) *MbClient {
 		cli.handler = h
 	}
 	return &cli
+}
+
+func (m *MbClient) Connect() error {
+	err := m.handler.Connect()
+	if err != nil {
+		return fmt.Errorf("failed to connect: %s", err.Error())
+	}
+	m.Client = modbus.NewClient(m.handler)
+	return nil
+}
+
+func (m *MbClient) Close() error {
+	err := m.handler.Close()
+	if err != nil {
+		return fmt.Errorf("failed to close client: %s", err.Error())
+	}
+	return nil
 }
