@@ -5,9 +5,9 @@ type Slave struct {
 	cfg    SlaveConfig
 }
 
-func NewSlave(item SlaveConfig, client *MbClient) *Slave {
+func NewSlave(cfg SlaveConfig, client *MbClient) *Slave {
 	return &Slave{
 		client: client,
-		cfg:    item,
+		cfg:    cfg,
 	}
 }

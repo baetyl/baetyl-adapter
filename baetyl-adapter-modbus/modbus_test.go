@@ -1,11 +1,12 @@
 package main
 
 import (
+	"testing"
+
 	"github.com/baetyl/baetyl/logger"
 	"github.com/baetyl/baetyl/protocol/mqtt"
 	"github.com/baetyl/baetyl/utils"
 	"github.com/stretchr/testify/assert"
-	"testing"
 )
 
 func TestModbus(t *testing.T) {
@@ -27,7 +28,7 @@ publish:
 	var cfg Config
 	utils.UnmarshalYAML([]byte(confString), &cfg)
 	hubCfg := mqtt.ClientInfo{
-		Address: "tcp://127.0.0.1:1883",
+		Address:  "tcp://127.0.0.1:1883",
 		ClientID: "modbus1",
 	}
 	log := logger.WithField("modbus", "test")

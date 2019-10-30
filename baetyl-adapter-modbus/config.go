@@ -4,7 +4,7 @@ import "time"
 
 // Config custom configuration of the timer module
 type Config struct {
-	// slave.go list
+	// slave list
 	Slaves []SlaveConfig `yaml:"slaves" json:"slaves"`
 	// map list
 	Maps []MapConfig `yaml:"maps" json:"maps"`

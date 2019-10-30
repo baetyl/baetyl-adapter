@@ -1,9 +1,10 @@
 package main
 
 import (
+	"time"
+
 	"github.com/baetyl/baetyl/logger"
 	"github.com/baetyl/baetyl/protocol/mqtt"
-	"time"
 )
 
 type Modbus struct {
@@ -27,7 +28,7 @@ func newModbus(cfg Config, mqttCli *mqtt.Dispatcher, log logger.Logger) *Modbus 
 	}
 	mbs := make(map[byte]*mb, 0)
 	for _, mapConfig := range cfg.Maps {
-		m := NewMap(mapConfig, slaves[mapConfig.SlaveID], logger.WithField("modbus", "map"))
+		m := NewMap(mapConfig, slaves[mapConfig.SlaveID], logger.WithField("modbus", "map point"))
 		if _, ok := mbs[mapConfig.SlaveID]; !ok {
 			mbs[mapConfig.SlaveID] = NewMb(slaves[mapConfig.SlaveID].cfg.Interval)
 		}
