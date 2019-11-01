@@ -2,13 +2,13 @@ package main
 
 import (
 	"fmt"
+	"strings"
 	"sync"
 	"time"
 
-	"github.com/baetyl/baetyl/sdk/baetyl-go"
-
 	"github.com/baetyl/baetyl/logger"
 	"github.com/baetyl/baetyl/protocol/mqtt"
+	"github.com/baetyl/baetyl/sdk/baetyl-go"
 )
 
 type Modbus struct {
@@ -72,15 +72,14 @@ func (mod *Modbus) Start(ctx baetyl.Context) {
 }
 
 func (mod *Modbus) Close() error {
-	var msg string
+	var msgs []string
 	for _, slave := range mod.slaves {
 		if err := slave.client.Close(); err != nil {
-			mod.log.Warnf("failed to close slave id=%d: %s", slave.cfg.ID, err.Error())
-			msg += ";" + err.Error()
+			msgs = append(msgs, err.Error())
 		}
 	}
-	if msg != "" {
-		return fmt.Errorf("failed to close slaves: %s", msg)
+	if len(msgs) != 0 {
+		return fmt.Errorf("failed to close slaves: %s", strings.Join(msgs, ";"))
 	}
 	return nil
 }
