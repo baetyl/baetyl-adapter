@@ -72,15 +72,15 @@ func (mod *Modbus) Start(ctx baetyl.Context) {
 }
 
 func (mod *Modbus) Close() error {
-	failed := false
+	var msg string
 	for _, slave := range mod.slaves {
 		if err := slave.client.Close(); err != nil {
-			mod.log.Errorf("failed to close slave id=%d", slave.cfg.ID)
-			failed = true
+			mod.log.Warnf("failed to close slave id=%d: %s", slave.cfg.ID, err.Error())
+			msg += ";" + err.Error()
 		}
 	}
-	if failed {
-		return fmt.Errorf("failed to close slaves")
+	if msg != "" {
+		return fmt.Errorf("failed to close slaves: %s", msg)
 	}
 	return nil
 }
