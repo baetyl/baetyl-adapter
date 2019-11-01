@@ -51,9 +51,9 @@ func (mod *Modbus) Start(ctx baetyl.Context) {
 	for _, m := range mod.mbs {
 		wg.Add(1)
 		go func(m *mb, wg *sync.WaitGroup) {
+			defer wg.Done()
 			ticker := time.NewTicker(m.Interval)
 			defer ticker.Stop()
-			defer wg.Done()
 			for {
 				select {
 				case <-ticker.C:
@@ -70,9 +70,11 @@ func (mod *Modbus) Start(ctx baetyl.Context) {
 	wg.Wait()
 }
 
-func (mod *Modbus) Close() {
+func (mod *Modbus) Close() error {
 	for _, slave := range mod.slaves {
-		slave.client.Close()
+		if err := slave.client.Close(); err != nil {
+			return err
+		}
 	}
-	mod.mqttCli.Close()
+	return nil
 }
