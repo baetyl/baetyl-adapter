@@ -1,0 +1,15 @@
+sudo: false
+
+language: go
+
+go:
+  - "1.13"
+
+install: true
+script:
+  - echo "baetyl-adapter build begin"
+  - env GO111MODULE=on GOPROXY=https://goproxy.io make
+  - echo "baetyl-adapter build end"
+  - echo "baetyl uint test begin"
+  - env GO111MODULE=on GOPROXY=https://goproxy.io make test GOTESTFLAG=--race
+  - echo "baetyl unit test end"
