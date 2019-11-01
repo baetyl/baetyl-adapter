@@ -15,6 +15,7 @@ func main() {
 		}
 		log := ctx.Log()
 		// create a hub client
+		ctx.Config().Hub.BufferSize = len(cfg.Maps) * 2
 		mqttCli, err := ctx.NewHubClient("", nil)
 		if err != nil {
 			return err
@@ -24,9 +25,9 @@ func main() {
 		defer mqttCli.Close()
 
 		modbus := newModbus(cfg, mqttCli, log)
-		modbus.Start()
+		modbus.Start(ctx)
 		defer modbus.Close()
-		ctx.Wait()
+		//ctx.Wait()
 		return nil
 	})
 }

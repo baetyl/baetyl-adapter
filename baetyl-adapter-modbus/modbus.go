@@ -1,7 +1,10 @@
 package main
 
 import (
+	"sync"
 	"time"
+
+	"github.com/baetyl/baetyl/sdk/baetyl-go"
 
 	"github.com/baetyl/baetyl/logger"
 	"github.com/baetyl/baetyl/protocol/mqtt"
@@ -43,11 +46,14 @@ func newModbus(cfg Config, mqttCli *mqtt.Dispatcher, log logger.Logger) *Modbus 
 	}
 }
 
-func (mod *Modbus) Start() {
+func (mod *Modbus) Start(ctx baetyl.Context) {
+	var wg sync.WaitGroup
 	for _, m := range mod.mbs {
-		go func(m *mb) {
+		wg.Add(1)
+		go func(m *mb, wg *sync.WaitGroup) {
 			ticker := time.NewTicker(m.Interval)
 			defer ticker.Stop()
+			defer wg.Done()
 			for {
 				select {
 				case <-ticker.C:
@@ -55,10 +61,13 @@ func (mod *Modbus) Start() {
 					if err != nil {
 						mod.log.Errorf(err.Error())
 					}
+				case <-ctx.WaitChan():
+					return
 				}
 			}
-		}(m)
+		}(m, &wg)
 	}
+	wg.Wait()
 }
 
 func (mod *Modbus) Close() {

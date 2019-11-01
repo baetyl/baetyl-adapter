@@ -35,5 +35,6 @@ publish:
 	mqttCli := mqtt.NewDispatcher(hubCfg, log)
 	modbus := newModbus(cfg, mqttCli, log)
 	assert.NotNil(t, modbus)
+	modbus.Close()
 	slave.Stop()
 }

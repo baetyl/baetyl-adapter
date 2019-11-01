@@ -2,9 +2,10 @@ package main
 
 import (
 	"fmt"
+	"strings"
+
 	"github.com/goburrow/modbus"
 	"github.com/goburrow/serial"
-	"strings"
 )
 
 type handler interface {
