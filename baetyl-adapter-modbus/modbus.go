@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"sync"
 	"time"
 
@@ -71,10 +72,15 @@ func (mod *Modbus) Start(ctx baetyl.Context) {
 }
 
 func (mod *Modbus) Close() error {
+	failed := false
 	for _, slave := range mod.slaves {
 		if err := slave.client.Close(); err != nil {
-			return err
+			mod.log.Errorf("failed to close slave id=%d", slave.cfg.ID)
+			failed = true
 		}
+	}
+	if failed {
+		return fmt.Errorf("failed to close slaves")
 	}
 	return nil
 }
