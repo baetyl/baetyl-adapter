@@ -1,8 +1,11 @@
-[![Baetyl-logo](https://github.com/baetyl/baetyl/blob/master/docs/images/logo/logo-with-name.png)](https://baetyl.io)
+baetyl-adapter
+========
 
-![Travis (.org) branch](https://img.shields.io/travis/baetyl/baetyl-adapter/master) [![Release](https://img.shields.io/github/v/release/baetyl/baetyl-adapter?color=blue&label=release)](https://github.com/baetyl/baetyl-adapter/releases) [![License](https://img.shields.io/github/license/baetyl/baetyl-adapter?color=blue)](LICENSE) [![Stars](https://img.shields.io/github/stars/baetyl/baetyl-adapter?style=social)](Stars)
+[![Build Status](https://travis-ci.org/baetyl/baetyl-adapter.svg?branch=master)](https://travis-ci.org/baetyl/baetyl-adapter)
+[![Go Report Card](https://goreportcard.com/badge/github.com/baetyl/baetyl-adapter)](https://goreportcard.com/report/github.com/baetyl/baetyl-adapter) 
+[![codecov](https://codecov.io/gh/baetyl/baetyl-adapter/branch/master/graph/badge.svg)](https://codecov.io/gh/baetyl/baetyl-adapter)
+[![License](https://img.shields.io/github/license/baetyl/baetyl-adapter.svg)](./LICENSE)
 
-# baetyl-adapter
 All modules that synchronize data with the clients, such as mqtt, modbus, coap, etc.
 
 ## offical modules
