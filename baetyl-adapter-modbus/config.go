@@ -1,15 +1,36 @@
 package main
 
-import "time"
+import (
+	"time"
+)
 
 // Config custom configuration of the timer module
 type Config struct {
 	// slave list
 	Slaves []SlaveConfig `yaml:"slaves" json:"slaves"`
-	// map list
-	Maps []MapConfig `yaml:"maps" json:"maps"`
+	// job list
+	Jobs []Job `yaml:"jobs" json:"jobs"`
 	// publish topic of collected data
 	Publish Publish `yaml:"publish" json:"publish" validate:"nonnil"`
+}
+
+type Job struct {
+	SlaveId  byte          `yaml:"slaveid" json:"slaveid"`
+	Interval time.Duration `yaml:"interval" json:"interval" default:"5s" validate:"nonzero"`
+	Kind     string        `yaml:"kind" json:"kind" validate:"regexp=^(binary|json)?$" default:"json"`
+	Time     Time          `yaml:"time" json:"time"`
+	Maps     []MapConfig  `yaml:"maps" json:"maps"`
+}
+
+type Field struct {
+	Name string `yaml:"name" json:"name"`
+	Type string `yaml:"type" json:"type"`
+}
+
+type Time struct {
+	Type      string `yaml:"type" json:"type" validate:"regexp=^(long|string)?$" default:"long"`
+	Format    string `yaml:"format" json:"format" default:"2006-01-02 15:04:05"`
+	Precision string `yaml:"precision" json:"precision" default:"second"`
 }
 
 // SlaveConfig modbus slave device configuration
@@ -46,19 +67,18 @@ type SlaveConfig struct {
 		// RxDuringTx Rx during Tx
 		RxDuringTx bool `yaml:"rx_during_tx" json:"rx_during_tx"`
 	} `yaml:"rs485" json:"rs485"`
-	Interval time.Duration `yaml:"interval" json:"interval" default:"5s" validate:"nonzero"`
 }
 
 // MapConfig map point configuration
 type MapConfig struct {
-	// Slave Id
-	SlaveID byte `yaml:"slaveid" json:"slaveid"`
 	// Function
 	Function byte `yaml:"function" json:"function" validate:"min=1, max=4"`
 	// Address
 	Address uint16 `yaml:"address" json:"address"`
 	// Quantity
 	Quantity uint16 `yaml:"quantity" json:"quantity"`
+	// parsed attributes
+	Field *Field `yaml:"field" json:"field"`
 }
 
 // Publish publish topic

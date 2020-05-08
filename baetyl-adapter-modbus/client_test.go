@@ -2,7 +2,7 @@ package main
 
 import (
 	"encoding/binary"
-	"github.com/baetyl/baetyl/utils"
+	"github.com/baetyl/baetyl-go/utils"
 	"github.com/tbrandon/mbserver"
 	"testing"
 	"time"

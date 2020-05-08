@@ -1,32 +1,37 @@
 package main
 
 import (
-	"github.com/baetyl/baetyl/sdk/baetyl-go"
+	"github.com/baetyl/baetyl-go/context"
+	"github.com/baetyl/baetyl-go/mqtt"
+	uuid "github.com/satori/go.uuid"
 )
 
 func main() {
 	// Running module in baetyl context
-	baetyl.Run(func(ctx baetyl.Context) error {
+	context.Run(func(ctx context.Context) error {
 		var cfg Config
 		// load custom config
-		err := ctx.LoadConfig(&cfg)
+		err := ctx.LoadCustomConfig(&cfg)
 		if err != nil {
 			return err
 		}
-		log := ctx.Log()
-		// create a hub client
-		if ctx.Config().Hub.BufferSize < len(cfg.Maps) * 2 {
-			ctx.Config().Hub.BufferSize = len(cfg.Maps) * 2
-		}
-		mqttCli, err := ctx.NewHubClient("", nil)
-		if err != nil {
-			return err
-		}
-		//start client to keep connection with hub
-		mqttCli.Start(nil)
-		defer mqttCli.Close()
 
-		modbus := newModbus(cfg, mqttCli, log)
+		mqttConfig := ctx.ServiceConfig().MQTT
+		if mqttConfig.MaxCacheMessages < len(cfg.Jobs) * 2 {
+			mqttConfig.MaxCacheMessages = len(cfg.Jobs) * 2
+		}
+		if mqttConfig.ClientID == "" {
+			mqttConfig.ClientID = uuid.NewV4().String()
+		}
+		option, err := mqttConfig.ToClientOptions(nil)
+		if err != nil {
+			return err
+		}
+		mqtt := mqtt.NewClient(*option)
+		defer mqtt.Close()
+
+		log := ctx.Log()
+		modbus := NewModbus(cfg, mqtt, log)
 		modbus.Start(ctx)
 		return modbus.Close()
 	})
