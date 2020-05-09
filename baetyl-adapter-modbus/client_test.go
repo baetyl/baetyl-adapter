@@ -17,8 +17,8 @@ func TestClient(t *testing.T) {
 	cfg := SlaveConfig{}
 	client := NewClient(cfg)
 	err := client.Connect()
-	defer client.Close()
-	assert.Error(t, err, "failed to connect: no such file or directory")
+	assert.Error(t, err)
+	client.Close()
 
 	cfg = SlaveConfig{
 		ID:      1,
@@ -26,11 +26,10 @@ func TestClient(t *testing.T) {
 	}
 	client = NewClient(cfg)
 	err = client.Connect()
-	defer client.Close()
 	assert.NoError(t, err)
 	err = client.Close()
 	assert.NoError(t, err)
-	slave.Stop()
+	client.Close()
 
 	cfg = SlaveConfig{
 		ID:      2,
@@ -38,8 +37,9 @@ func TestClient(t *testing.T) {
 	}
 	client = NewClient(cfg)
 	err = client.Connect()
-	defer client.Close()
-	assert.Error(t, err, "failed to connect: dial tcp 127.0.0.1:50201: connect: connection refused")
+	client.Close()
+	assert.Error(t, err)
+	slave.Stop()
 }
 
 type MbSlave struct {

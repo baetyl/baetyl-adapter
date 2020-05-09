@@ -16,10 +16,10 @@ type Config struct {
 
 type Job struct {
 	SlaveId  byte          `yaml:"slaveid" json:"slaveid"`
-	Interval time.Duration `yaml:"interval" json:"interval" default:"5s" validate:"nonzero"`
-	Kind     string        `yaml:"kind" json:"kind" validate:"regexp=^(binary|json)?$" default:"json"`
+	Interval time.Duration `yaml:"interval" json:"interval" default:"5s"`
+	Encoding string        `yaml:"encoding" json:"encoding" validate:"regexp=^(binary|json)?$" default:"json"`
 	Time     Time          `yaml:"time" json:"time"`
-	Maps     []MapConfig  `yaml:"maps" json:"maps"`
+	Maps     []MapConfig   `yaml:"maps" json:"maps"`
 }
 
 type Field struct {
@@ -28,9 +28,9 @@ type Field struct {
 }
 
 type Time struct {
-	Type      string `yaml:"type" json:"type" validate:"regexp=^(long|string)?$" default:"long"`
+	Field     `yaml:",inline" json:",inline"`
 	Format    string `yaml:"format" json:"format" default:"2006-01-02 15:04:05"`
-	Precision string `yaml:"precision" json:"precision" default:"second"`
+	Precision string `yaml:"precision" json:"precision" default:"s" validate:"regexp=^(s|ns)?$"`
 }
 
 // SlaveConfig modbus slave device configuration
@@ -72,13 +72,13 @@ type SlaveConfig struct {
 // MapConfig map point configuration
 type MapConfig struct {
 	// Function
-	Function byte `yaml:"function" json:"function" validate:"min=1, max=4"`
+	Function byte `yaml:"function" json:"function" validate:"min=1, max=4" validate:"nonzero"`
 	// Address
-	Address uint16 `yaml:"address" json:"address"`
+	Address uint16 `yaml:"address" json:"address" validate:"nonzero"`
 	// Quantity
 	Quantity uint16 `yaml:"quantity" json:"quantity"`
 	// parsed attributes
-	Field *Field `yaml:"field" json:"field"`
+	Field Field `yaml:"field" json:"field"`
 }
 
 // Publish publish topic

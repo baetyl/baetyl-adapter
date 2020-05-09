@@ -18,7 +18,7 @@ slaves:
 jobs:
 - slaveid: 1
   interval: 3s
-  kind: binary
+  encoding: binary
   maps:
   - address: 0
     quantity: 1
@@ -45,13 +45,12 @@ publish:
 			},
 		},
 		Jobs: []Job{{
-			SlaveId: 1,
+			SlaveId:  1,
 			Interval: 3 * time.Second,
-			Kind: BinaryKind,
+			Encoding: BinaryEncoding,
 			Time: Time{
-				Type:      LongTimeType,
 				Format:    "2006-01-02 15:04:05",
-				Precision: "second",
+				Precision: "s",
 			},
 			Maps: []MapConfig{{
 				Address:  0,

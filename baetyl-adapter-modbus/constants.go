@@ -1,17 +1,18 @@
 package main
 
 const (
-	BinaryKind = "binary"
-	JsonKind = "json"
-	SecondPrecision = "second"
-	NanoPrecision = "nano"
-	LongTimeType = "long"
-	StringTimeType = "string"
-	TimeKey = "time"
+	BinaryEncoding = "binary"
+	JsonEncoding = "json"
+	SecondPrecision = "s"
+	NanoPrecision = "ns"
+	IntegerTime = "long"
+	StringTime = "string"
 	Coil = 1
 	DiscreteInput = 2
 	HoldingRegister = 3
 	InputRegister = 4
+	SlaveId = "slaveid"
+	Attributes = "attributes"
 
 	Bool = "bool"
 	Int16 = "int16"

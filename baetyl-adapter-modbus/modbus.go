@@ -12,14 +12,30 @@ import (
 )
 
 type Modbus struct {
+	ctx    context.Context
+	wg     *sync.WaitGroup
 	cfg    Config
 	ws     []*Worker
 	logger *log.Logger
+	mqtt   *mqtt.Client
 	slaves map[byte]*Slave
 }
 
-func NewModbus(cfg Config, mqtt *mqtt.Client, logger *log.Logger) *Modbus {
-	// modbus slave connection init
+func NewModbus(ctx context.Context, cfg Config) (*Modbus, error) {
+	mqttCfg := ctx.ServiceConfig().MQTT
+	if mqttCfg.MaxCacheMessages < len(cfg.Jobs)*2 {
+		mqttCfg.MaxCacheMessages = len(cfg.Jobs) * 2
+	}
+	if mqttCfg.ClientID == "" {
+		mqttCfg.ClientID = ctx.ServiceName()
+	}
+	option, err := mqttCfg.ToClientOptions(nil)
+	if err != nil {
+		return nil, err
+	}
+	mqtt := mqtt.NewClient(*option)
+	logger := ctx.Log()
+
 	slaves := map[byte]*Slave{}
 	for _, slaveConfig := range cfg.Slaves {
 		client := NewClient(slaveConfig)
@@ -34,39 +50,42 @@ func NewModbus(cfg Config, mqtt *mqtt.Client, logger *log.Logger) *Modbus {
 		w := NewWorker(job, slaves[job.SlaveId], mqtt, logger.With(log.Any("modbus", "map point")))
 		ws = append(ws, w)
 	}
-	return &Modbus{
+	mod := &Modbus{
+		wg:     new(sync.WaitGroup),
+		ctx:    ctx,
 		cfg:    cfg,
 		ws:     ws,
+		mqtt:   mqtt,
 		logger: logger,
 		slaves: slaves,
 	}
+	for _, worker := range mod.ws {
+		mod.wg.Add(1)
+		go mod.working(worker)
+	}
+	return mod, nil
 }
 
-func (mod *Modbus) Start(ctx context.Context) {
-	var wg sync.WaitGroup
-	for _, worker := range mod.ws {
-		wg.Add(1)
-		go func(w *Worker, wg *sync.WaitGroup) {
-			defer wg.Done()
-			ticker := time.NewTicker(w.job.Interval)
-			defer ticker.Stop()
-			for {
-				select {
-				case <-ticker.C:
-					err := w.Execute(mod.cfg.Publish)
-					if err != nil {
-						mod.logger.Error("failed to execute job", log.Error(err))
-					}
-				case <-ctx.WaitChan():
-					return
-				}
+func (mod *Modbus) working(w *Worker) {
+	ticker := time.NewTicker(w.job.Interval)
+	defer ticker.Stop()
+	for {
+		select {
+		case <-ticker.C:
+			err := w.Execute(mod.cfg.Publish)
+			if err != nil {
+				mod.logger.Error("failed to execute job", log.Error(err))
 			}
-		}(worker, &wg)
+		case <-mod.ctx.WaitChan():
+			mod.logger.Warn("worker stopped", log.Any("worker", w))
+			mod.wg.Done()
+			return
+		}
 	}
-	wg.Wait()
 }
 
 func (mod *Modbus) Close() error {
+	mod.wg.Wait()
 	var msgs []string
 	for _, slave := range mod.slaves {
 		if err := slave.client.Close(); err != nil {
@@ -76,5 +95,5 @@ func (mod *Modbus) Close() error {
 	if len(msgs) != 0 {
 		return fmt.Errorf("failed to close slaves: %s", strings.Join(msgs, ";"))
 	}
-	return nil
+	return mod.mqtt.Close()
 }

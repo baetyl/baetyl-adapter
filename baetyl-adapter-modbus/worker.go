@@ -1,14 +1,13 @@
 package main
 
 import (
+	"encoding/binary"
 	"encoding/json"
 	"fmt"
 	"github.com/256dpi/gomqtt/packet"
 	"github.com/baetyl/baetyl-go/log"
-	"time"
-
-	"encoding/binary"
 	"github.com/baetyl/baetyl-go/mqtt"
+	"time"
 )
 
 type Worker struct {
@@ -33,7 +32,24 @@ func NewWorker(job Job, slave *Slave, mqtt *mqtt.Client, logger *log.Logger) *Wo
 
 func (w *Worker) Execute(publish Publish) error {
 	var pld []byte
-	result := map[string]interface{}{}
+	attr := map[string]interface{}{}
+
+	for _, m := range w.maps {
+		p, err := m.Collect()
+		if err != nil {
+			return err
+		}
+		if w.job.Encoding == BinaryEncoding {
+			pld = append(pld, p...)
+		} else if w.job.Encoding == JsonEncoding {
+			pa, err := m.Parse(p[4:])
+			if err != nil {
+				return err
+			}
+			attr[m.cfg.Field.Name] = pa
+		}
+	}
+
 	now := time.Now()
 	var ts int64
 	if w.job.Time.Precision == SecondPrecision {
@@ -41,45 +57,32 @@ func (w *Worker) Execute(publish Publish) error {
 	} else if w.job.Time.Precision == NanoPrecision {
 		ts = now.UnixNano()
 	}
-	if w.job.Kind == BinaryKind {
-		pld = append(pld, w.job.SlaveId)
+	if w.job.Encoding ==  BinaryEncoding {
 		tp := make([]byte, 8)
 		binary.BigEndian.PutUint64(tp, uint64(ts))
 		pld = append(pld, tp...)
-		for _, m := range w.maps {
-			p, err := m.Collect()
-			if err != nil {
-				return err
-			}
-			pld = append(pld, p...)
-		}
-	} else if w.job.Kind == JsonKind {
-		if w.job.Time.Type == LongTimeType {
-			result[TimeKey] = ts
-		} else if w.job.Time.Type == StringTimeType {
+		pld = append(pld, w.job.SlaveId)
+	} else if w.job.Encoding == JsonEncoding {
+		if w.job.Time.Type == IntegerTime {
+			attr[w.job.Time.Name] = ts
+		} else if w.job.Time.Type == StringTime {
 			if w.job.Time.Format != "" {
-				result[TimeKey] = now.Format(w.job.Time.Format)
+				attr[w.job.Time.Name] = now.Format(w.job.Time.Format)
 			} else {
-				result[TimeKey] = now.String()
+				attr[w.job.Time.Name] = now.String()
 			}
 		}
-		for _, m := range w.maps {
-			if m.cfg.Field == nil {
-				w.logger.Error("field can not be null when parsing", log.Any("map", m))
-				continue
-			}
-			p, err := m.Parse()
-			if err != nil {
-				return err
-			}
-			result[m.cfg.Field.Name] = p
+		res := map[string]interface{}{
+			SlaveId: w.job.SlaveId,
+			Attributes: attr,
 		}
 		var err error
-		pld, err = json.Marshal(result)
+		pld, err = json.Marshal(res)
 		if err != nil {
 			return err
 		}
 	}
+
 	if w.mqtt != nil {
 		pkt := packet.NewPublish()
 		pkt.Message.Topic = publish.Topic

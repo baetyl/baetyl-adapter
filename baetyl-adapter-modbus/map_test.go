@@ -121,6 +121,6 @@ func TestMapCollect(t *testing.T) {
 	}
 	ma2 := NewMap(mapConfig2, slave, log)
 	_, err = ma2.Collect()
-	assert.Error(t, err, "failed to collect data from slave.go: id=1 function=2 address=0 quantity=0")
+	assert.Error(t, err)
 	server.Stop()
 }

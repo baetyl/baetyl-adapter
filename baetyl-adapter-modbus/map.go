@@ -31,40 +31,12 @@ func NewMap(cfg MapConfig, s *Slave, logger *log.Logger) *Map {
 		r = s.client.ReadInputRegisters
 	default:
 	}
-	if cfg.Field != nil {
-		cfg = calcQuantity(cfg)
-	}
 	return &Map{
 		cfg:    cfg,
 		r:      r,
 		s:      s,
 		logger: logger,
 	}
-}
-
-func calcQuantity(cfg MapConfig) MapConfig {
-	switch cfg.Field.Type {
-	case Bool:
-		cfg.Quantity = 1
-	case Int16:
-		cfg.Quantity = 1
-	case UInt16:
-		cfg.Quantity = 1
-	case Int32:
-		cfg.Quantity = 2
-	case UInt32:
-		cfg.Quantity = 2
-	case Int64:
-		cfg.Quantity = 4
-	case UInt64:
-		cfg.Quantity = 4
-	case Float32:
-		cfg.Quantity = 2
-	case Float64:
-		cfg.Quantity = 4
-	default:
-	}
-	return cfg
 }
 
 func (m *Map) read() (results []byte, err error) {
@@ -95,22 +67,17 @@ func (m *Map) Collect() ([]byte, error) {
 	return pld, nil
 }
 
-func (m *Map) Parse() (interface{}, error) {
-	res, err := m.read()
-	if err != nil {
-		return nil, fmt.Errorf("failed to collect data from slave.go: id=%d function=%d address=%d quantity=%d",
-			m.s.cfg.ID, m.cfg.Function, m.cfg.Address, m.cfg.Quantity)
-	}
+func (m *Map) Parse(data []byte) (interface{}, error) {
 	if m.cfg.Function == Coil || m.cfg.Function == DiscreteInput {
-		if len(res) != 1 {
+		if len(data) != 1 {
 			return nil, fmt.Errorf("quantity should be 1 when parsing coil or discrete input")
 		}
-		res[0] = res[0] & 0x1
+		data[0] = data[0] & 0x1
 		if m.cfg.Field.Type != Bool {
 			return nil, fmt.Errorf("field type should be bool when parsing coil or discrete input")
 		}
 	}
-	p, err := parse(bytes.NewBuffer(res), m.cfg.Field.Type)
+	p, err := parse(bytes.NewBuffer(data), m.cfg.Field.Type)
 	if err != nil {
 		return nil, err
 	}
