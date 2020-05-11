@@ -3,6 +3,6 @@
 
 FROM --platform=$TARGETPLATFORM busybox
 ARG TARGETPLATFORM
-ARG MODULE=baetyl-adapter-modbus
+ARG MODULE=modbus
 COPY $TARGETPLATFORM/$MODULE/bin/$MODULE /bin/
-ENTRYPOINT ["baetyl-adapter-modbus"]
+ENTRYPOINT ["modbus"]

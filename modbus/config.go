@@ -9,7 +9,7 @@ type Config struct {
 	// slave list
 	Slaves []SlaveConfig `yaml:"slaves" json:"slaves"`
 	// job list
-	Jobs []Job `yaml:"jobs" json:"jobs"`
+	Jobs []Job `yaml:"jobs" json:"jobs" validate:"validjobs"`
 	// publish topic of collected data
 	Publish Publish `yaml:"publish" json:"publish" validate:"nonnil"`
 }

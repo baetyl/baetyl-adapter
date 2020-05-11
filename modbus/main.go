@@ -2,7 +2,12 @@ package main
 
 import (
 	"github.com/baetyl/baetyl-go/context"
+	"gopkg.in/validator.v2"
 )
+
+func init() {
+	validator.SetValidationFunc("validjobs", validateJobs)
+}
 
 func main() {
 	// Running module in baetyl context
@@ -12,10 +17,7 @@ func main() {
 		if err := ctx.LoadCustomConfig(&cfg); err != nil {
 			return err
 		}
-		if err := validate(cfg); err != nil {
-			return err
-		}
-		setDefault(&cfg, ctx)
+		setDefault(&cfg)
 		modbus, err := NewModbus(ctx, cfg)
 		if err != nil {
 			return err

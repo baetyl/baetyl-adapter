@@ -1,6 +1,6 @@
-# baetyl-adapter-modbus
+# modbus
 
-baetyl-adapter-modbus模块基于modbus协议采集数据, 该模块支持配置多个从设备（简称为slave）,针对设备设置采集周期定时采集数据。
+modbus模块基于modbus协议采集数据, 该模块支持配置多个从设备（简称为slave）,针对设备设置采集周期定时采集数据。
 连接方式可选TCP或RTU模式。采集数据点可以通过采集设备的id, 数据起始地址，数据单元长度，功能码定义。
 采集后的数据会以二进制流的形式发送到配置的mqtt hub主题，典型配置如下：
 

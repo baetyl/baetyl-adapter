@@ -9,4 +9,4 @@ baetyl-adapter
 All modules that synchronize data with the clients, such as mqtt, modbus, coap, etc.
 
 ## offical modules
-- [baetyl-adapter-modbus](baetyl-adapter-modbus/README.md)
+- [modbus](modbus/README.md)

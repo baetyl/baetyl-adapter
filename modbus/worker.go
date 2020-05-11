@@ -32,7 +32,36 @@ func NewWorker(job Job, slave *Slave, mqtt *mqtt.Client, logger *log.Logger) *Wo
 
 func (w *Worker) Execute(publish Publish) error {
 	var pld []byte
-	attr := map[string]interface{}{}
+	res := map[string]interface{}{}
+
+	now := time.Now()
+	var ts int64
+	if w.job.Time.Precision == SecondPrecision {
+		ts = now.Unix()
+	} else if w.job.Time.Precision == NanoPrecision {
+		ts = now.UnixNano()
+	}
+	if w.job.Encoding == BinaryEncoding {
+		tp := make([]byte, 8)
+		binary.BigEndian.PutUint64(tp, uint64(ts))
+		pld = append(pld, tp...)
+		// for aligning
+		sp := make([]byte, 4)
+		sp[0] = w.job.SlaveId
+		pld = append(pld, sp...)
+	} else if w.job.Encoding == JsonEncoding {
+		if w.job.Time.Type == IntegerTime {
+			res[w.job.Time.Name] = ts
+		} else if w.job.Time.Type == StringTime {
+			res[w.job.Time.Name] = now.Format(w.job.Time.Format)
+		}
+		res[SlaveId] = w.job.SlaveId
+		var err error
+		pld, err = json.Marshal(res)
+		if err != nil {
+			return err
+		}
+	}
 
 	for _, m := range w.maps {
 		p, err := m.Collect()
@@ -46,36 +75,11 @@ func (w *Worker) Execute(publish Publish) error {
 			if err != nil {
 				return err
 			}
-			attr[m.cfg.Field.Name] = pa
+			res[m.cfg.Field.Name] = pa
 		}
 	}
 
-	now := time.Now()
-	var ts int64
-	if w.job.Time.Precision == SecondPrecision {
-		ts = now.Unix()
-	} else if w.job.Time.Precision == NanoPrecision {
-		ts = now.UnixNano()
-	}
-	if w.job.Encoding ==  BinaryEncoding {
-		tp := make([]byte, 8)
-		binary.BigEndian.PutUint64(tp, uint64(ts))
-		pld = append(pld, tp...)
-		pld = append(pld, w.job.SlaveId)
-	} else if w.job.Encoding == JsonEncoding {
-		if w.job.Time.Type == IntegerTime {
-			attr[w.job.Time.Name] = ts
-		} else if w.job.Time.Type == StringTime {
-			if w.job.Time.Format != "" {
-				attr[w.job.Time.Name] = now.Format(w.job.Time.Format)
-			} else {
-				attr[w.job.Time.Name] = now.String()
-			}
-		}
-		res := map[string]interface{}{
-			SlaveId: w.job.SlaveId,
-			Attributes: attr,
-		}
+	if w.job.Encoding == JsonEncoding {
 		var err error
 		pld, err = json.Marshal(res)
 		if err != nil {

@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"github.com/baetyl/baetyl-go/context"
 	"strings"
 	"sync"
@@ -13,7 +12,7 @@ import (
 
 type Modbus struct {
 	ctx    context.Context
-	wg     *sync.WaitGroup
+	wg     sync.WaitGroup
 	cfg    Config
 	ws     []*Worker
 	logger *log.Logger
@@ -47,11 +46,14 @@ func NewModbus(ctx context.Context, cfg Config) (*Modbus, error) {
 	}
 	var ws []*Worker
 	for _, job := range cfg.Jobs {
-		w := NewWorker(job, slaves[job.SlaveId], mqtt, logger.With(log.Any("modbus", "map point")))
-		ws = append(ws, w)
+		if slave := slaves[job.SlaveId]; slave != nil {
+			w := NewWorker(job, slave, mqtt, logger.With(log.Any("modbus", "map point")))
+			ws = append(ws, w)
+		} else {
+			logger.Error("slave of job not exist", log.Any("slaveid", job.SlaveId))
+		}
 	}
 	mod := &Modbus{
-		wg:     new(sync.WaitGroup),
 		ctx:    ctx,
 		cfg:    cfg,
 		ws:     ws,
@@ -72,6 +74,7 @@ func (mod *Modbus) working(w *Worker) {
 	for {
 		select {
 		case <-ticker.C:
+			// TODO add independent topic of each job, supply default topic like <service_name>/<slave_id>
 			err := w.Execute(mod.cfg.Publish)
 			if err != nil {
 				mod.logger.Error("failed to execute job", log.Error(err))
@@ -93,7 +96,7 @@ func (mod *Modbus) Close() error {
 		}
 	}
 	if len(msgs) != 0 {
-		return fmt.Errorf("failed to close slaves: %s", strings.Join(msgs, ";"))
+		mod.logger.Error("failed to close slaves", log.Any("slaves", strings.Join(msgs, ";")))
 	}
 	return mod.mqtt.Close()
 }

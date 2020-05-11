@@ -5,14 +5,14 @@ const (
 	JsonEncoding = "json"
 	SecondPrecision = "s"
 	NanoPrecision = "ns"
-	IntegerTime = "long"
+	IntegerTime = "integer"
 	StringTime = "string"
 	Coil = 1
 	DiscreteInput = 2
 	HoldingRegister = 3
 	InputRegister = 4
 	SlaveId = "slaveid"
-	Attributes = "attributes"
+	SysTime = "time"
 
 	Bool = "bool"
 	Int16 = "int16"
@@ -24,3 +24,24 @@ const (
 	Float32 = "float32"
 	Float64 = "float64"
 )
+
+var SysType map[string]struct{}
+var SysName map[string]struct{}
+
+func init() {
+	SysType = map[string]struct{}{
+		Bool: {},
+		Int16: {},
+		UInt16: {},
+		Int32: {},
+		UInt32: {},
+		Int64: {},
+		UInt64: {},
+		Float32: {},
+		Float64: {},
+	}
+	SysName = map[string]struct{}{
+		SysTime: {},
+		SlaveId: {},
+	}
+}
