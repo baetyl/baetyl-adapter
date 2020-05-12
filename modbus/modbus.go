@@ -6,7 +6,6 @@ import (
 	"time"
 
 	"github.com/baetyl/baetyl-go/log"
-	"github.com/baetyl/baetyl-go/mqtt"
 )
 
 type Modbus struct {
@@ -17,44 +16,30 @@ type Modbus struct {
 	slaves map[byte]*Slave
 }
 
-func NewModbus(ctx context.Context, cfg Config) (*Modbus, error) {
-	mqttCfg := ctx.ServiceConfig().MQTT
-	if mqttCfg.MaxCacheMessages < len(cfg.Jobs)*2 {
-		mqttCfg.MaxCacheMessages = len(cfg.Jobs) * 2
-	}
-	if mqttCfg.ClientID == "" {
-		mqttCfg.ClientID = ctx.ServiceName()
-	}
-	option, err := mqttCfg.ToClientOptions(nil)
-	if err != nil {
-		return nil, err
-	}
-	sender := mqttSender{publish: cfg.Publish, Client: mqtt.NewClient(*option)}
-	logger := ctx.Log()
-
+func NewModbus(ctx context.Context, cfg Config, sender Sender) (*Modbus, error) {
 	slaves := map[byte]*Slave{}
 	for _, slaveConfig := range cfg.Slaves {
 		client := NewClient(slaveConfig)
 		err := client.Connect()
 		if err != nil {
-			logger.Error("failed to connect slave id=%d: %s", log.Any("id", slaveConfig.ID), log.Error(err))
+			ctx.Log().Error("failed to connect slave id=%d: %s", log.Any("id", slaveConfig.ID), log.Error(err))
 		}
 		slaves[slaveConfig.ID] = NewSlave(slaveConfig, client)
-	}
-	var ws []*Worker
-	for _, job := range cfg.Jobs {
-		if slave := slaves[job.SlaveId]; slave != nil {
-			w := NewWorker(job, slave, sender, logger.With(log.Any("modbus", "map point")))
-			ws = append(ws, w)
-		} else {
-			logger.Error("slave of job not exist", log.Any("slaveid", job.SlaveId))
-		}
 	}
 	mod := &Modbus{
 		ctx:    ctx,
 		sender: sender,
-		logger: logger,
+		logger: ctx.Log(),
 		slaves: slaves,
+	}
+	var ws []*Worker
+	for _, job := range cfg.Jobs {
+		if slave := slaves[job.SlaveId]; slave != nil {
+			w := NewWorker(job, slave, sender, log.With(log.Any("modbus", "map point")))
+			ws = append(ws, w)
+		} else {
+			ctx.Log().Error("slave of job not exist", log.Any("slaveid", job.SlaveId))
+		}
 	}
 	for _, worker := range ws {
 		mod.wg.Add(1)
@@ -85,7 +70,9 @@ func (mod *Modbus) working(w *Worker) {
 func (mod *Modbus) Close() error {
 	mod.wg.Wait()
 	for _, slave := range mod.slaves {
-		mod.logger.Warn("failed to close slave", log.Any("slave id", slave.cfg.ID))
+		if err := slave.client.Close(); err != nil {
+			mod.logger.Warn("failed to close slave", log.Any("slave id", slave.cfg.ID))
+		}
 	}
-	return mod.sender.Close()
+	return nil
 }
