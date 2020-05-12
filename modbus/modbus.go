@@ -12,10 +12,8 @@ import (
 type Modbus struct {
 	ctx    context.Context
 	wg     sync.WaitGroup
-	cfg    Config
-	ws     []*Worker
+	sender Sender
 	logger *log.Logger
-	mqtt   *mqtt.Client
 	slaves map[byte]*Slave
 }
 
@@ -31,7 +29,7 @@ func NewModbus(ctx context.Context, cfg Config) (*Modbus, error) {
 	if err != nil {
 		return nil, err
 	}
-	mqtt := mqtt.NewClient(*option)
+	sender := mqttSender{publish: cfg.Publish, Client: mqtt.NewClient(*option)}
 	logger := ctx.Log()
 
 	slaves := map[byte]*Slave{}
@@ -46,7 +44,7 @@ func NewModbus(ctx context.Context, cfg Config) (*Modbus, error) {
 	var ws []*Worker
 	for _, job := range cfg.Jobs {
 		if slave := slaves[job.SlaveId]; slave != nil {
-			w := NewWorker(job, slave, mqtt, logger.With(log.Any("modbus", "map point")))
+			w := NewWorker(job, slave, sender, logger.With(log.Any("modbus", "map point")))
 			ws = append(ws, w)
 		} else {
 			logger.Error("slave of job not exist", log.Any("slaveid", job.SlaveId))
@@ -54,13 +52,11 @@ func NewModbus(ctx context.Context, cfg Config) (*Modbus, error) {
 	}
 	mod := &Modbus{
 		ctx:    ctx,
-		cfg:    cfg,
-		ws:     ws,
-		mqtt:   mqtt,
+		sender: sender,
 		logger: logger,
 		slaves: slaves,
 	}
-	for _, worker := range mod.ws {
+	for _, worker := range ws {
 		mod.wg.Add(1)
 		go mod.working(worker)
 	}
@@ -74,7 +70,7 @@ func (mod *Modbus) working(w *Worker) {
 		select {
 		case <-ticker.C:
 			// TODO add independent topic of each job, supply default topic like <service_name>/<slave_id>
-			err := w.Execute(mod.cfg.Publish)
+			err := w.Execute()
 			if err != nil {
 				mod.logger.Error("failed to execute job", log.Error(err))
 			}
@@ -89,7 +85,7 @@ func (mod *Modbus) working(w *Worker) {
 func (mod *Modbus) Close() error {
 	mod.wg.Wait()
 	for _, slave := range mod.slaves {
-		mod.logger.Error("failed to close slave", log.Any("slave id", slave.cfg.ID))
+		mod.logger.Warn("failed to close slave", log.Any("slave id", slave.cfg.ID))
 	}
-	return mod.mqtt.Close()
+	return mod.sender.Close()
 }

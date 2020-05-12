@@ -12,7 +12,6 @@ func main() {
 		if err := ctx.LoadCustomConfig(&cfg); err != nil {
 			return err
 		}
-		setDefault(&cfg)
 		modbus, err := NewModbus(ctx, cfg)
 		if err != nil {
 			return err

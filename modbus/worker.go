@@ -4,23 +4,21 @@ import (
 	"encoding/binary"
 	"encoding/json"
 	"fmt"
-	"github.com/256dpi/gomqtt/packet"
 	"github.com/baetyl/baetyl-go/log"
-	"github.com/baetyl/baetyl-go/mqtt"
 	"time"
 )
 
 type Worker struct {
-	job    Job
-	mqtt   *mqtt.Client
+	job Job
+	sender Sender
 	maps   []*Map
 	logger *log.Logger
 }
 
-func NewWorker(job Job, slave *Slave, mqtt *mqtt.Client, logger *log.Logger) *Worker {
+func NewWorker(job Job, slave *Slave, s Sender, logger *log.Logger) *Worker {
 	w := &Worker{
 		job:    job,
-		mqtt:   mqtt,
+		sender: s,
 		logger: logger,
 	}
 	for _, m := range job.Maps {
@@ -30,7 +28,7 @@ func NewWorker(job Job, slave *Slave, mqtt *mqtt.Client, logger *log.Logger) *Wo
 	return w
 }
 
-func (w *Worker) Execute(publish Publish) error {
+func (w *Worker) Execute() error {
 	var pld []byte
 	res := map[string]interface{}{}
 
@@ -84,13 +82,8 @@ func (w *Worker) Execute(publish Publish) error {
 		}
 	}
 
-	if w.mqtt != nil {
-		pkt := packet.NewPublish()
-		pkt.Message.Topic = publish.Topic
-		pkt.Message.QOS = packet.QOS(publish.QOS)
-		pkt.Message.Payload = pld
-		err := w.mqtt.Send(pkt)
-		if err != nil {
+	if w.sender != nil {
+		if err := w.sender.Send(pld); err != nil {
 			return fmt.Errorf("failed to publish: %s", err.Error())
 		}
 	}

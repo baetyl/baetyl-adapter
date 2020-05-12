@@ -4,7 +4,6 @@ import (
 	"errors"
 	"fmt"
 	"gopkg.in/validator.v2"
-	"reflect"
 	"time"
 )
 
@@ -26,7 +25,7 @@ type Job struct {
 	SlaveId  byte          `yaml:"slaveid" json:"slaveid"`
 	Interval time.Duration `yaml:"interval" json:"interval" default:"5s"`
 	Encoding string        `yaml:"encoding" json:"encoding" validate:"regexp=^(binary|json)?$" default:"json"`
-	Time     Time          `yaml:"time" json:"time"`
+	Time     Time          `yaml:"time" json:"time" default:"{\"name\":\"time\", \"type\":\"integer\"}"`
 	Maps     []MapConfig   `yaml:"maps" json:"maps"`
 }
 
@@ -96,9 +95,6 @@ type Publish struct {
 }
 
 func validateJobs(v interface{}, param string) error {
-	if reflect.ValueOf(v).Kind() != reflect.Slice {
-		return errors.New("unsupported type")
-	}
 	jobs, ok := v.([]Job)
 	if !ok {
 		return errors.New("only support job array")
@@ -115,7 +111,7 @@ func validateJobs(v interface{}, param string) error {
 				}
 			}
 			if _, ok := SysName[m.Field.Name]; ok {
-				return fmt.Errorf("can not define sys field name: %s", m.Field.Name)
+				return fmt.Errorf("please use another name, '%s' is reserved by the system", m.Field.Name)
 			}
 			if _, ok := SysType[m.Field.Type]; !ok {
 				return fmt.Errorf("unsupported field type: %s", m.Field.Type)
@@ -125,12 +121,37 @@ func validateJobs(v interface{}, param string) error {
 	return nil
 }
 
-func (t *Time) SetDefaults() {
-	if t.Name == "" {
-		t.Name = SysTime
+func (job *Job) SetDefaults() {
+	var ms []MapConfig
+	for _, m := range job.Maps {
+		if job.Encoding == JsonEncoding {
+			populateQuantityIfNeeds(&m)
+		}
+		ms = append(ms, m)
 	}
-	if t.Type == "" {
-		t.Type = IntegerTime
-	}
+	job.Maps = ms
 }
 
+func populateQuantityIfNeeds(cfg *MapConfig) {
+	switch cfg.Field.Type {
+	case Bool:
+		cfg.Quantity = 1
+	case Int16:
+		cfg.Quantity = 1
+	case UInt16:
+		cfg.Quantity = 1
+	case Int32:
+		cfg.Quantity = 2
+	case UInt32:
+		cfg.Quantity = 2
+	case Int64:
+		cfg.Quantity = 4
+	case UInt64:
+		cfg.Quantity = 4
+	case Float32:
+		cfg.Quantity = 2
+	case Float64:
+		cfg.Quantity = 4
+	default:
+	}
+}
