@@ -1,8 +1,16 @@
 package main
 
 import (
+	"errors"
+	"fmt"
+	"gopkg.in/validator.v2"
+	"reflect"
 	"time"
 )
+
+func init() {
+	validator.SetValidationFunc("validjobs", validateJobs)
+}
 
 // Config custom configuration of the timer module
 type Config struct {
@@ -86,3 +94,43 @@ type Publish struct {
 	QOS   uint32 `yaml:"qos" json:"qos" validate:"min=0, max=1"`
 	Topic string `yaml:"topic" json:"topic" default:"timer" validate:"nonzero"`
 }
+
+func validateJobs(v interface{}, param string) error {
+	if reflect.ValueOf(v).Kind() != reflect.Slice {
+		return errors.New("unsupported type")
+	}
+	jobs, ok := v.([]Job)
+	if !ok {
+		return errors.New("only support job array")
+	}
+	for _, job := range jobs {
+		for _, m := range job.Maps {
+			if job.Encoding == JsonEncoding {
+				if m.Field.Name == "" || m.Field.Type == "" {
+					return fmt.Errorf("field name or type of map %+v shall not be empty when encoding is json", m)
+				}
+			} else if job.Encoding == BinaryEncoding {
+				if m.Quantity == 0 {
+					return fmt.Errorf("quantity of map %+v shall not be zero when encoding is binary", m)
+				}
+			}
+			if _, ok := SysName[m.Field.Name]; ok {
+				return fmt.Errorf("can not define sys field name: %s", m.Field.Name)
+			}
+			if _, ok := SysType[m.Field.Type]; !ok {
+				return fmt.Errorf("unsupported field type: %s", m.Field.Type)
+			}
+		}
+	}
+	return nil
+}
+
+func (t *Time) SetDefaults() {
+	if t.Name == "" {
+		t.Name = SysTime
+	}
+	if t.Type == "" {
+		t.Type = IntegerTime
+	}
+}
+

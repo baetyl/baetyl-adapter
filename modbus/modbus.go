@@ -2,7 +2,6 @@ package main
 
 import (
 	"github.com/baetyl/baetyl-go/context"
-	"strings"
 	"sync"
 	"time"
 
@@ -89,14 +88,8 @@ func (mod *Modbus) working(w *Worker) {
 
 func (mod *Modbus) Close() error {
 	mod.wg.Wait()
-	var msgs []string
 	for _, slave := range mod.slaves {
-		if err := slave.client.Close(); err != nil {
-			msgs = append(msgs, err.Error())
-		}
-	}
-	if len(msgs) != 0 {
-		mod.logger.Error("failed to close slaves", log.Any("slaves", strings.Join(msgs, ";")))
+		mod.logger.Error("failed to close slave", log.Any("slave id", slave.cfg.ID))
 	}
 	return mod.mqtt.Close()
 }

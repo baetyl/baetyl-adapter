@@ -42,13 +42,10 @@ func (w *Worker) Execute(publish Publish) error {
 		ts = now.UnixNano()
 	}
 	if w.job.Encoding == BinaryEncoding {
-		tp := make([]byte, 8)
+		tp := make([]byte, 12)
 		binary.BigEndian.PutUint64(tp, uint64(ts))
+		tp[8] = w.job.SlaveId
 		pld = append(pld, tp...)
-		// for aligning
-		sp := make([]byte, 4)
-		sp[0] = w.job.SlaveId
-		pld = append(pld, sp...)
 	} else if w.job.Encoding == JsonEncoding {
 		if w.job.Time.Type == IntegerTime {
 			res[w.job.Time.Name] = ts

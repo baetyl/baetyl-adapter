@@ -1,6 +1,8 @@
 package main
 
 import (
+	"bytes"
+	"encoding/binary"
 	"testing"
 
 	"github.com/baetyl/baetyl-go/log"
@@ -10,15 +12,13 @@ import (
 func TestMapRead(t *testing.T) {
 	server := MbSlave{}
 	server.StartTCPSlave()
-
-	slaveConfig := SlaveConfig{
+	slaveCfg := SlaveConfig{
 		ID:      1,
 		Address: "tcp://127.0.0.1:50200",
 	}
-	client := NewClient(slaveConfig)
+	client := NewClient(slaveCfg)
 	client.Connect()
-	defer client.Close()
-	slave := NewSlave(slaveConfig, client)
+	slave := NewSlave(slaveCfg, client)
 	log := log.With(log.Any("modbus", "map_test"))
 
 	cfg1 := MapConfig{
@@ -27,7 +27,6 @@ func TestMapRead(t *testing.T) {
 		Quantity: 1,
 	}
 	m := NewMap(cfg1, slave, log)
-
 	results, err := m.read()
 	assert.NoError(t, err)
 	expected1 := []byte{1}
@@ -76,9 +75,18 @@ func TestMapRead(t *testing.T) {
 	}
 	m = NewMap(cfg5, slave, log)
 	results, err = m.read()
-	assert.Error(t, err, "modbus: quantity '0' must be between '1' and '125',")
-
+	assert.Error(t, err)
 	server.Stop()
+	client.Close()
+
+	cfg6 := MapConfig{
+		Function: 3,
+		Address:  0,
+		Quantity: 1,
+	}
+	m = NewMap(cfg6, slave, log)
+	_, err = m.read()
+	assert.Error(t, err)
 }
 
 func TestMapCollect(t *testing.T) {
@@ -123,4 +131,66 @@ func TestMapCollect(t *testing.T) {
 	_, err = ma2.Collect()
 	assert.Error(t, err)
 	server.Stop()
+}
+
+func TestParse(t *testing.T) {
+	m := NewMap(MapConfig{}, NewSlave(SlaveConfig{}, NewClient(SlaveConfig{})), log.With(log.Any("modbus", "test")))
+	cfgs := []MapConfig{
+		{Field: Field{Type: Bool}},
+		{Field: Field{Type: Int16}},
+		{Field: Field{Type: UInt16}},
+		{Field: Field{Type: Int32}},
+		{Field: Field{Type: UInt32}},
+		{Field: Field{Type: Int64}},
+		{Field: Field{Type: UInt64}},
+		{Field: Field{Type: Float32}},
+		{Field: Field{Type: Float64}},
+		{Field: Field{Type: "string"}},
+		{Function: Coil},
+		{Function: Coil, Field: Field{Type: Int16}},
+	}
+	source := [][]byte{
+		convertToByte(true),
+		convertToByte(int16(1)),
+		convertToByte(uint16(2)),
+		convertToByte(int32(3)),
+		convertToByte(uint32(4)),
+		convertToByte(int64(5)),
+		convertToByte(uint64(6)),
+		convertToByte(float32(7)),
+		convertToByte(float64(8)),
+		convertToByte(""),
+		{0, 1},
+		convertToByte(false),
+	}
+	expected := []interface{}{
+		true,
+		int16(1),
+		uint16(2),
+		int32(3),
+		uint32(4),
+		int64(5),
+		uint64(6),
+		float32(7),
+		float64(8),
+		nil,
+		nil,
+		nil,
+	}
+	for i, src := range source {
+		m.cfg = cfgs[i]
+		res, err := m.Parse(src)
+		assert.Equal(t, res, expected[i])
+		if i <= 8 {
+			assert.NoError(t, err)
+		} else {
+			assert.Error(t, err)
+		}
+	}
+}
+
+func convertToByte(v interface{}) []byte {
+	buf := bytes.NewBuffer(nil)
+	binary.Write(buf, binary.BigEndian, v)
+	return buf.Bytes()
 }

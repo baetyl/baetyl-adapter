@@ -49,6 +49,10 @@ publish:
 			Interval: 3 * time.Second,
 			Encoding: BinaryEncoding,
 			Time: Time{
+				Field: Field{
+					Name: SysTime,
+					Type: IntegerTime,
+				},
 				Format:    "2006-01-02 15:04:05",
 				Precision: "s",
 			},

@@ -2,12 +2,7 @@ package main
 
 import (
 	"github.com/baetyl/baetyl-go/context"
-	"gopkg.in/validator.v2"
 )
-
-func init() {
-	validator.SetValidationFunc("validjobs", validateJobs)
-}
 
 func main() {
 	// Running module in baetyl context

@@ -16,7 +16,7 @@
 /**/*.zip
 /**/etc
 /**/var
-/**/coverage.out
+/**/coverage.*
 /**/.DS_Store
 /**/libexec
 /**/*.db
