@@ -1,4 +1,4 @@
-package main
+package modbus
 
 import (
 	"encoding/binary"

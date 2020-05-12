@@ -1,4 +1,4 @@
-package main
+package modbus
 
 type Slave struct {
 	client *MbClient

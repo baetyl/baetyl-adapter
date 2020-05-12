@@ -1,11 +1,11 @@
-package main
+package modbus
 
 import (
 	"github.com/256dpi/gomqtt/packet"
 	"github.com/baetyl/baetyl-go/mqtt"
 )
 
-//go:generate mockgen -destination=mock/sender.go -package=main github.com/baetyl/baetyl-adapter/modbus Sender
+//go:generate mockgen -destination=mock/sender.go -package=mock github.com/baetyl/baetyl-adapter/modbus Sender
 
 type Sender interface {
 	Send(msg []byte) error
@@ -14,13 +14,20 @@ type Sender interface {
 
 type mqttSender struct {
 	*mqtt.Client
-	publish Publish
+	Publish Publish
+}
+
+func NewMqttSender(publish Publish, client *mqtt.Client) Sender {
+	return mqttSender{
+		Client:  client,
+		Publish: publish,
+	}
 }
 
 func (s mqttSender) Send(msg []byte) error {
 	pkt := packet.NewPublish()
-	pkt.Message.Topic = s.publish.Topic
-	pkt.Message.QOS = packet.QOS(s.publish.QOS)
+	pkt.Message.Topic = s.Publish.Topic
+	pkt.Message.QOS = packet.QOS(s.Publish.QOS)
 	pkt.Message.Payload = msg
 	if err := s.Client.Send(pkt); err != nil {
 		return err

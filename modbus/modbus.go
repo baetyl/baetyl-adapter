@@ -1,4 +1,4 @@
-package main
+package modbus
 
 import (
 	"github.com/baetyl/baetyl-go/context"
@@ -22,7 +22,7 @@ func NewModbus(ctx context.Context, cfg Config, sender Sender) (*Modbus, error) 
 		client := NewClient(slaveConfig)
 		err := client.Connect()
 		if err != nil {
-			ctx.Log().Error("failed to connect slave id=%d: %s", log.Any("id", slaveConfig.ID), log.Error(err))
+			ctx.Log().Error("failed to connect slave", log.Any("id", slaveConfig.ID), log.Error(err))
 		}
 		slaves[slaveConfig.ID] = NewSlave(slaveConfig, client)
 	}
@@ -35,10 +35,10 @@ func NewModbus(ctx context.Context, cfg Config, sender Sender) (*Modbus, error) 
 	var ws []*Worker
 	for _, job := range cfg.Jobs {
 		if slave := slaves[job.SlaveId]; slave != nil {
-			w := NewWorker(job, slave, sender, log.With(log.Any("modbus", "map point")))
+			w := NewWorker(job, slave, sender, log.With(log.Any("slaveid", job.SlaveId)))
 			ws = append(ws, w)
 		} else {
-			ctx.Log().Error("slave of job not exist", log.Any("slaveid", job.SlaveId))
+			ctx.Log().Error("slave of job not exist")
 		}
 	}
 	for _, worker := range ws {

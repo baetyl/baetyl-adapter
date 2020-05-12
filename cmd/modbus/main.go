@@ -1,6 +1,7 @@
 package main
 
 import (
+	"github.com/baetyl/baetyl-adapter/modbus"
 	"github.com/baetyl/baetyl-go/context"
 	"github.com/baetyl/baetyl-go/mqtt"
 )
@@ -8,7 +9,7 @@ import (
 func main() {
 	// Running module in baetyl context
 	context.Run(func(ctx context.Context) error {
-		var cfg Config
+		var cfg modbus.Config
 		// load custom config
 		if err := ctx.LoadCustomConfig(&cfg); err != nil {
 			return err
@@ -24,9 +25,9 @@ func main() {
 		if err != nil {
 			return err
 		}
-		sender := mqttSender{publish: cfg.Publish, Client: mqtt.NewClient(*option)}
+		sender := modbus.NewMqttSender(cfg.Publish, mqtt.NewClient(*option))
 		defer sender.Close()
-		modbus, err := NewModbus(ctx, cfg, sender)
+		modbus, err := modbus.NewModbus(ctx, cfg, sender)
 		if err != nil {
 			return err
 		}
