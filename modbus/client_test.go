@@ -1,13 +1,12 @@
-package main
+package modbus
 
 import (
+	"context"
 	"encoding/binary"
-	"github.com/baetyl/baetyl/utils"
-	"github.com/tbrandon/mbserver"
-	"testing"
-	"time"
-
 	"github.com/stretchr/testify/assert"
+	"github.com/tbrandon/mbserver"
+	"sync"
+	"testing"
 )
 
 func TestClient(t *testing.T) {
@@ -17,8 +16,7 @@ func TestClient(t *testing.T) {
 	cfg := SlaveConfig{}
 	client := NewClient(cfg)
 	err := client.Connect()
-	defer client.Close()
-	assert.Error(t, err, "failed to connect: no such file or directory")
+	assert.Error(t, err)
 
 	cfg = SlaveConfig{
 		ID:      1,
@@ -26,11 +24,11 @@ func TestClient(t *testing.T) {
 	}
 	client = NewClient(cfg)
 	err = client.Connect()
-	defer client.Close()
 	assert.NoError(t, err)
 	err = client.Close()
 	assert.NoError(t, err)
-	slave.Stop()
+	err = client.Close()
+	assert.NoError(t, err)
 
 	cfg = SlaveConfig{
 		ID:      2,
@@ -38,18 +36,23 @@ func TestClient(t *testing.T) {
 	}
 	client = NewClient(cfg)
 	err = client.Connect()
-	defer client.Close()
-	assert.Error(t, err, "failed to connect: dial tcp 127.0.0.1:50201: connect: connection refused")
+	assert.Error(t, err)
+	slave.Stop()
 }
 
 type MbSlave struct {
-	tomb utils.Tomb
+	ctx     context.Context
+	cancel  context.CancelFunc
+	wg      sync.WaitGroup
+	started chan bool
 }
 
-func (m *MbSlave) StartTCPSlave() error {
-	err := m.tomb.Go(m.startTCP)
-	time.Sleep(10 * time.Millisecond)
-	return err
+func (m *MbSlave) StartTCPSlave() {
+	m.ctx, m.cancel = context.WithCancel(context.Background())
+	m.started = make(chan bool)
+	m.wg.Add(1)
+	go m.startTCP()
+	<-m.started
 }
 
 func (m *MbSlave) startTCP() error {
@@ -97,20 +100,19 @@ func (m *MbSlave) startTCP() error {
 			}
 			return data, &mbserver.Success
 		})
-
-	defer server.Close()
-
+	m.started <- true
 	for {
 		select {
-		case <-m.tomb.Dying():
+		case <-m.ctx.Done():
+			m.wg.Done()
+			server.Close()
 			return nil
-		default:
-			time.Sleep(100 * time.Millisecond)
 		}
 	}
 }
 
 func (m *MbSlave) Stop() {
-	m.tomb.Kill(nil)
-	m.tomb.Wait()
+	m.cancel()
+	m.wg.Wait()
+	close(m.started)
 }

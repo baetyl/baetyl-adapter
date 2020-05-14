@@ -18,9 +18,9 @@ endif
 
 OUTPUT:=output
 
-OUTPUT_MODS:=$(MODULES:%=baetyl-adapter-%)
-TEST_MODS:=$(MODULES:%=test/baetyl-adapter-%) #a little tricky to add prefix 'test/' in order to distinguish from OUTPUT_MODS
-IMAGE_MODS:=$(MODULES:%=image/baetyl-adapter-%) # a little tricky to add prefix 'image/' in order to distinguish from OUTPUT_MODS
+OUTPUT_MODS:=$(MODULES)
+TEST_MODS:=$(MODULES:%=test/%) #a little tricky to add prefix 'test/' in order to distinguish from OUTPUT_MODS
+IMAGE_MODS:=$(MODULES:%=image/%) # a little tricky to add prefix 'image/' in order to distinguish from OUTPUT_MODS
 
 .PHONY: all $(OUTPUT_MODS)
 all: $(OUTPUT_MODS)
