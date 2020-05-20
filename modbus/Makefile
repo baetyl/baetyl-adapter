@@ -2,9 +2,8 @@
 # source: github.com/baetyl/baetyl/sdk/baetyl-go/templates/Makefile-go
 
 MODULE:=modbus
-SRC_FILES:=$(shell find . -type f -name '*.go')
 BIN_FILE:=modbus
-BIN_CMD=$(shell echo $(@:$(OUTPUT)/%/$(MODULE)/bin/$(BIN_FILE)=%)  | sed 's:/v:/:g' | awk -F '/' '{print "CGO_ENABLED=0 GOOS="$$1" GOARCH="$$2" GOARM="$$3" go build"}') -o $@ ${GO_FLAGS} .
+BIN_CMD=$(shell echo $(@:$(OUTPUT)/%/$(MODULE)/bin/$(BIN_FILE)=%)  | sed 's:/v:/:g' | awk -F '/' '{print "CGO_ENABLED=0 GOOS="$$1" GOARCH="$$2" GOARM="$$3" go build"}') -o $@ ${GO_FLAGS} ../cmd/$(MODULE)
 COPY_DIR:=../output
 PLATFORM_ALL:=darwin/amd64 linux/amd64 linux/arm64 linux/386 linux/arm/v7
 
@@ -41,7 +40,7 @@ OUTPUT_PKGS:=$(OUTPUT_MODS:%=%/$(MODULE)-$(VERSION).zip) # TODO: switch to tar
 .PHONY: all
 all: $(OUTPUT_BINS) $(OUTPUT_PKGS)
 
-$(OUTPUT_BINS): $(SRC_FILES)
+$(OUTPUT_BINS):
 	@echo "BUILD $@"
 	@install -d -m 0755 $(dir $@)
 	$(BIN_CMD)
