@@ -81,7 +81,7 @@ type MapConfig struct {
 	// Function
 	Function byte `yaml:"function" json:"function" validate:"min=1, max=4" validate:"nonzero"`
 	// Address
-	Address uint16 `yaml:"address" json:"address" validate:"nonzero"`
+	Address uint16 `yaml:"address" json:"address"`
 	// Quantity
 	Quantity uint16 `yaml:"quantity" json:"quantity"`
 	// parsed attributes
