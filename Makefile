@@ -1,13 +1,21 @@
+MODULES?=modbus
+
+OUTPUT_MODS:=$(MODULES:%=cmd/%)
+IMAGE_MODS:=$(MODULES:%=cmd/%)
 GO_TEST_FLAGS?=-race -short -covermode=atomic -coverprofile=coverage.out
 GO_TEST_PKGS?=$(shell go list ./...)
 
-.PHONY: all
-all: $(SRC_FILES)
-	make -C cmd/modbus all
+.PHONY: all $(OUTPUT_MODS)
+all: $(OUTPUT_MODS)
 
-.PHONY: image
-image:
-	make -C cmd/modbus image
+$(OUTPUT_MODS):
+	@${MAKE} -C $@
+
+.PHONY: image $(IMAGE_MODS)
+image: $(IMAGE_MODS)
+
+$(IMAGE_MODS):
+	@${MAKE} -C $@ image
 
 .PHONY: test
 test: fmt
