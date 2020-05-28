@@ -9,7 +9,7 @@ import (
 )
 
 type Worker struct {
-	job Job
+	job    Job
 	sender Sender
 	maps   []*Map
 	logger *log.Logger

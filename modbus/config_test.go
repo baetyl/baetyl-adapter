@@ -70,94 +70,94 @@ jobs:
       type: float64
 publish:
   topic: test`
-		ioutil.WriteFile(filepath.Join(dir, fileName), []byte(confString), 0755)
-		utils.LoadYAML(filepath.Join(dir, fileName), &cfg)
-		cfg2 := Config{
-			Slaves: []SlaveConfig{{
-				ID:          1,
-				Address:     "tcp://127.0.0.1:502",
-				Timeout:     10 * time.Second,
-				IdleTimeout: 1 * time.Minute,
-				BaudRate:    19200,
-				DataBits:    8,
-				StopBits:    1,
-				Parity:      "E",
-			},},
-			Jobs: []Job{{
-				SlaveId:  1,
-				Interval: 3 * time.Second,
-				Encoding: JsonEncoding,
-				Time: Time{
-					Field: Field{
-						Name: SysTime,
-						Type: IntegerTime,
-					},
-					Format:    "2006-01-02 15:04:05",
-					Precision: "s",
+	ioutil.WriteFile(filepath.Join(dir, fileName), []byte(confString), 0755)
+	utils.LoadYAML(filepath.Join(dir, fileName), &cfg)
+	cfg2 := Config{
+		Slaves: []SlaveConfig{{
+			ID:          1,
+			Address:     "tcp://127.0.0.1:502",
+			Timeout:     10 * time.Second,
+			IdleTimeout: 1 * time.Minute,
+			BaudRate:    19200,
+			DataBits:    8,
+			StopBits:    1,
+			Parity:      "E",
+		}},
+		Jobs: []Job{{
+			SlaveId:  1,
+			Interval: 3 * time.Second,
+			Encoding: JsonEncoding,
+			Time: Time{
+				Field: Field{
+					Name: SysTime,
+					Type: IntegerTime,
 				},
-				Maps: []MapConfig{
-					{
-						Address:  1,
-						Quantity: 1,
-						Function: 1,
-						Field:    Field{Name: "a", Type: Bool,},
-					},
-					{
-						Address:  2,
-						Quantity: 1,
-						Function: 3,
-						Field:    Field{Name: "b", Type: Int16,},
-					},
-					{
-						Address:  3,
-						Quantity: 1,
-						Function: 3,
-						Field:    Field{Name: "c", Type: UInt16,},
-					},
-					{
-						Address:  4,
-						Quantity: 2,
-						Function: 3,
-						Field:    Field{Name: "d", Type: Int32,},
-					},
-					{
-						Address:  5,
-						Quantity: 2,
-						Function: 3,
-						Field:    Field{Name: "e", Type: UInt32,},
-					},
-					{
-						Address:  6,
-						Quantity: 4,
-						Function: 3,
-						Field:    Field{Name: "f", Type: Int64,},
-					},
-					{
-						Address:  7,
-						Quantity: 4,
-						Function: 3,
-						Field:    Field{Name: "g", Type: UInt64,},
-					},
-					{
-						Address:  8,
-						Quantity: 2,
-						Function: 3,
-						Field:    Field{Name: "h", Type: Float32,},
-					},
-					{
-						Address:  9,
-						Quantity: 4,
-						Function: 3,
-						Field:    Field{Name: "i", Type: Float64,},
-					},
-				},
-			},},
-			Publish: Publish{
-				QOS:   0,
-				Topic: "test",
+				Format:    "2006-01-02 15:04:05",
+				Precision: "s",
 			},
-		}
-		assert.Equal(t, cfg, cfg2)
+			Maps: []MapConfig{
+				{
+					Address:  1,
+					Quantity: 1,
+					Function: 1,
+					Field:    Field{Name: "a", Type: Bool},
+				},
+				{
+					Address:  2,
+					Quantity: 1,
+					Function: 3,
+					Field:    Field{Name: "b", Type: Int16},
+				},
+				{
+					Address:  3,
+					Quantity: 1,
+					Function: 3,
+					Field:    Field{Name: "c", Type: UInt16},
+				},
+				{
+					Address:  4,
+					Quantity: 2,
+					Function: 3,
+					Field:    Field{Name: "d", Type: Int32},
+				},
+				{
+					Address:  5,
+					Quantity: 2,
+					Function: 3,
+					Field:    Field{Name: "e", Type: UInt32},
+				},
+				{
+					Address:  6,
+					Quantity: 4,
+					Function: 3,
+					Field:    Field{Name: "f", Type: Int64},
+				},
+				{
+					Address:  7,
+					Quantity: 4,
+					Function: 3,
+					Field:    Field{Name: "g", Type: UInt64},
+				},
+				{
+					Address:  8,
+					Quantity: 2,
+					Function: 3,
+					Field:    Field{Name: "h", Type: Float32},
+				},
+				{
+					Address:  9,
+					Quantity: 4,
+					Function: 3,
+					Field:    Field{Name: "i", Type: Float64},
+				},
+			},
+		}},
+		Publish: Publish{
+			QOS:   0,
+			Topic: "test",
+		},
+	}
+	assert.Equal(t, cfg, cfg2)
 
 	// encoding is json and field is empty
 	confString = `
