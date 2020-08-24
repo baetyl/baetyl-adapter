@@ -139,7 +139,7 @@ jobs:
         address: 40011 # 起始地址
         quantity: 1 # 采集数量，保持寄存器对应16bit，encoding为binary时，quantity不可缺失
 publish:
- topic: test # 采集数据发送的mqtt主题
+  topic: test # 采集数据发送的mqtt主题
 logger:
   filename: var/log/baetyl/service.log # 日志路径 
   level: info # 日志级别
@@ -170,7 +170,7 @@ jobs:
           name: humidity # 解析后数据field名
           type: float32 # 针对float32数据类型解析数据
 publish:
- topic: test # 采集数据发送的mqtt主题
+  topic: test # 采集数据发送的mqtt主题
 logger:
   filename: var/log/baetyl/service.log # 日志路径 
   level: info # 日志级别

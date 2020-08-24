@@ -1,7 +1,7 @@
 package modbus
 
 import (
-	"github.com/baetyl/baetyl-go/utils"
+	"github.com/baetyl/baetyl-go/v2/utils"
 	"github.com/stretchr/testify/assert"
 	"io/ioutil"
 	"path/filepath"
@@ -17,6 +17,7 @@ func TestConfig(t *testing.T) {
 	confString := `
 slaves:
 - id: 1
+  method: tcp
   address: tcp://127.0.0.1:502
 jobs:
 - slaveid: 1
@@ -68,13 +69,15 @@ jobs:
     field:
       name: i
       type: float64
-publish:
-  topic: test`
+  publish:
+    topic: test
+`
 	ioutil.WriteFile(filepath.Join(dir, fileName), []byte(confString), 0755)
 	utils.LoadYAML(filepath.Join(dir, fileName), &cfg)
 	cfg2 := Config{
 		Slaves: []SlaveConfig{{
 			ID:          1,
+			Method:      "tcp",
 			Address:     "tcp://127.0.0.1:502",
 			Timeout:     10 * time.Second,
 			IdleTimeout: 1 * time.Minute,
@@ -84,7 +87,7 @@ publish:
 			Parity:      "E",
 		}},
 		Jobs: []Job{{
-			SlaveId:  1,
+			SlaveID:  1,
 			Interval: 3 * time.Second,
 			Encoding: JsonEncoding,
 			Time: Time{
@@ -151,11 +154,11 @@ publish:
 					Field:    Field{Name: "i", Type: Float64},
 				},
 			},
+			Publish: Publish{
+				QOS:   0,
+				Topic: "test",
+			},
 		}},
-		Publish: Publish{
-			QOS:   0,
-			Topic: "test",
-		},
 	}
 	assert.Equal(t, cfg, cfg2)
 

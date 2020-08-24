@@ -1,22 +1,23 @@
 package modbus
 
 import (
-	"github.com/baetyl/baetyl-go/context"
+	"github.com/baetyl/baetyl-go/v2/context"
+	"github.com/baetyl/baetyl-go/v2/mqtt"
 	"sync"
 	"time"
 
-	"github.com/baetyl/baetyl-go/log"
+	"github.com/baetyl/baetyl-go/v2/log"
 )
 
 type Modbus struct {
 	ctx    context.Context
 	wg     sync.WaitGroup
-	sender Sender
+	mqtt   *mqtt.Client
 	logger *log.Logger
 	slaves map[byte]*Slave
 }
 
-func NewModbus(ctx context.Context, cfg Config, sender Sender) (*Modbus, error) {
+func NewModbus(ctx context.Context, cfg Config) (*Modbus, error) {
 	slaves := map[byte]*Slave{}
 	for _, slaveConfig := range cfg.Slaves {
 		client := NewClient(slaveConfig)
@@ -26,16 +27,33 @@ func NewModbus(ctx context.Context, cfg Config, sender Sender) (*Modbus, error) 
 		}
 		slaves[slaveConfig.ID] = NewSlave(slaveConfig, client)
 	}
+	mqttCfg := ctx.SystemConfig().Broker
+	if mqttCfg.MaxCacheMessages < len(cfg.Jobs)*2 {
+		mqttCfg.MaxCacheMessages = len(cfg.Jobs) * 2
+	}
+	if mqttCfg.ClientID == "" {
+		mqttCfg.ClientID = ctx.ServiceName()
+	}
+	option, err := mqttCfg.ToClientOptions()
+	if err != nil {
+		return nil, err
+	}
+	mqtt := mqtt.NewClient(option)
+	observer := NewObserver(slaves, ctx.Log())
+	if err := mqtt.Start(observer); err != nil {
+		return nil, err
+	}
 	mod := &Modbus{
 		ctx:    ctx,
-		sender: sender,
+		mqtt:   mqtt,
 		logger: ctx.Log(),
 		slaves: slaves,
 	}
 	var ws []*Worker
 	for _, job := range cfg.Jobs {
-		if slave := slaves[job.SlaveId]; slave != nil {
-			w := NewWorker(job, slave, sender, log.With(log.Any("slaveid", job.SlaveId)))
+		if slave := slaves[job.SlaveID]; slave != nil {
+			sender := NewMqttSender(job.Publish, mqtt)
+			w := NewWorker(job, slave, sender, log.With(log.Any("slaveid", job.SlaveID)))
 			ws = append(ws, w)
 		} else {
 			ctx.Log().Error("slave of job not exist")
@@ -74,5 +92,6 @@ func (mod *Modbus) Close() error {
 			mod.logger.Warn("failed to close slave", log.Any("slave id", slave.cfg.ID))
 		}
 	}
+	mod.mqtt.Close()
 	return nil
 }

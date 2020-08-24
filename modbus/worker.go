@@ -4,7 +4,7 @@ import (
 	"encoding/binary"
 	"encoding/json"
 	"fmt"
-	"github.com/baetyl/baetyl-go/log"
+	"github.com/baetyl/baetyl-go/v2/log"
 	"time"
 )
 
@@ -42,7 +42,7 @@ func (w *Worker) Execute() error {
 	if w.job.Encoding == BinaryEncoding {
 		tp := make([]byte, 12)
 		binary.BigEndian.PutUint64(tp, uint64(ts))
-		tp[8] = w.job.SlaveId
+		tp[8] = w.job.SlaveID
 		pld = append(pld, tp...)
 	} else if w.job.Encoding == JsonEncoding {
 		if w.job.Time.Type == IntegerTime {
@@ -50,7 +50,7 @@ func (w *Worker) Execute() error {
 		} else if w.job.Time.Type == StringTime {
 			res[w.job.Time.Name] = now.Format(w.job.Time.Format)
 		}
-		res[SlaveId] = w.job.SlaveId
+		res[SlaveId] = w.job.SlaveID
 		var err error
 		pld, err = json.Marshal(res)
 		if err != nil {

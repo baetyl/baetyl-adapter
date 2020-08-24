@@ -3,9 +3,9 @@ package modbus
 import (
 	"bytes"
 	"encoding/binary"
-	"errors"
 	"fmt"
-	"github.com/baetyl/baetyl-go/log"
+	"github.com/baetyl/baetyl-go/v2/errors"
+	"github.com/baetyl/baetyl-go/v2/log"
 	"io"
 )
 
@@ -52,6 +52,16 @@ func (m *Map) read() (results []byte, err error) {
 		return nil, err
 	}
 	return results, err
+}
+
+func (m *Map) write(function int, address, quantity uint16, value int) error {
+	switch function {
+	case DiscreteInput:
+	case InputRegister:
+		return errors.Errorf("illegal function code")
+
+	}
+	return nil
 }
 
 func (m *Map) Collect() ([]byte, error) {

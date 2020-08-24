@@ -25,7 +25,7 @@ func TestExecute(t *testing.T) {
 	slave := NewSlave(slaveCfg, client)
 	log := log.With(log.Any("modbus", "worker_test"))
 	job := Job{
-		SlaveId:  1,
+		SlaveID:  1,
 		Encoding: BinaryEncoding,
 		Maps: []MapConfig{{
 			Function: 4,

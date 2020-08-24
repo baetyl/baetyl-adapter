@@ -13,20 +13,25 @@ func init() {
 
 // Config custom configuration of the timer module
 type Config struct {
-	// slave list
+	// Slaves slave list
 	Slaves []SlaveConfig `yaml:"slaves" json:"slaves"`
-	// job list
+	// Jobs job list
 	Jobs []Job `yaml:"jobs" json:"jobs" validate:"validjobs"`
-	// publish topic of collected data
-	Publish Publish `yaml:"publish" json:"publish" validate:"nonnil"`
 }
 
 type Job struct {
-	SlaveId  byte          `yaml:"slaveid" json:"slaveid"`
+	// SlaveID slave id defined in slaves
+	SlaveID byte `yaml:"slaveid" json:"slaveid"`
+	// Interval the interval between task execution
 	Interval time.Duration `yaml:"interval" json:"interval" default:"5s"`
-	Encoding string        `yaml:"encoding" json:"encoding" validate:"regexp=^(binary|json)?$" default:"json"`
-	Time     Time          `yaml:"time" json:"time" default:"{\"name\":\"time\", \"type\":\"integer\"}"`
-	Maps     []MapConfig   `yaml:"maps" json:"maps"`
+	// Encoding whether collect data and send binary stream or collect and parse data send JSON data
+	Encoding string `yaml:"encoding" json:"encoding" validate:"regexp=^(binary|json)?$" default:"json"`
+	// Time time format
+	Time Time `yaml:"time" json:"time" default:"{\"name\":\"time\", \"type\":\"integer\"}"`
+	// Maps definition of data points
+	Maps []MapConfig `yaml:"maps" json:"maps"`
+	// Publish publish topic of collected data
+	Publish Publish `yaml:"publish" json:"publish" validate:"nonnil"`
 }
 
 type Field struct {
@@ -42,7 +47,10 @@ type Time struct {
 
 // SlaveConfig modbus slave device configuration
 type SlaveConfig struct {
+	// ID slave id
 	ID byte `yaml:"id" json:"id"`
+	// Method method to connect device
+	Method string `yaml:"method" json:"method" validate:"regexp=(tcp|rtu)" default:"rtu"`
 	// Address Device path (/dev/ttyS0)
 	Address string `yaml:"address" json:"address" default:"/dev/ttyS0"`
 	// Timeout Read (Write) timeout.
