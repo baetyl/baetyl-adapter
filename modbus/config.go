@@ -3,8 +3,9 @@ package modbus
 import (
 	"errors"
 	"fmt"
-	"gopkg.in/validator.v2"
 	"time"
+
+	"gopkg.in/validator.v2"
 )
 
 func init() {

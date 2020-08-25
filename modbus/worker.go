@@ -4,8 +4,9 @@ import (
 	"encoding/binary"
 	"encoding/json"
 	"fmt"
-	"github.com/baetyl/baetyl-go/v2/log"
 	"time"
+
+	"github.com/baetyl/baetyl-go/v2/log"
 )
 
 type Worker struct {
@@ -58,6 +59,7 @@ func (w *Worker) Execute() error {
 		}
 	}
 
+	data := make(map[string]interface{})
 	for _, m := range w.maps {
 		p, err := m.Collect()
 		if err != nil {
@@ -70,9 +72,10 @@ func (w *Worker) Execute() error {
 			if err != nil {
 				return err
 			}
-			res[m.cfg.Field.Name] = pa
+			data[m.cfg.Field.Name] = pa
 		}
 	}
+	res["attr"] = data
 
 	if w.job.Encoding == JsonEncoding {
 		var err error

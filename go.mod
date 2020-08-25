@@ -4,7 +4,6 @@ go 1.13
 
 require (
 	github.com/256dpi/gomqtt v0.14.2
-	github.com/baetyl/baetyl-go v0.1.92
 	github.com/baetyl/baetyl-go/v2 v2.0.26
 	github.com/creasty/defaults v1.4.0
 	github.com/goburrow/modbus v0.1.0

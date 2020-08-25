@@ -3,7 +3,7 @@ package modbus
 import (
 	"errors"
 	"github.com/baetyl/baetyl-adapter/modbus/mock"
-	"github.com/baetyl/baetyl-go/log"
+	"github.com/baetyl/baetyl-go/v2/log"
 	"github.com/creasty/defaults"
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/assert"
@@ -18,9 +18,11 @@ func TestExecute(t *testing.T) {
 
 	slaveCfg := SlaveConfig{
 		ID:      1,
+		Method:  TcpMethod,
 		Address: "tcp://127.0.0.1:50200",
 	}
-	client := NewClient(slaveCfg)
+	client, err := NewClient(slaveCfg)
+	assert.NoError(t, err)
 	client.Connect()
 	slave := NewSlave(slaveCfg, client)
 	log := log.With(log.Any("modbus", "worker_test"))
@@ -40,7 +42,7 @@ func TestExecute(t *testing.T) {
 	defaults.Set(job)
 	w := NewWorker(job, slave, ms, log)
 	ms.EXPECT().Send(gomock.Any()).Return(nil)
-	err := w.Execute()
+	err = w.Execute()
 	assert.NoError(t, err)
 
 	job.Encoding = JsonEncoding

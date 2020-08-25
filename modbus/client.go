@@ -2,10 +2,15 @@ package modbus
 
 import (
 	"fmt"
-	"strings"
 
+	"github.com/baetyl/baetyl-go/v2/errors"
 	"github.com/goburrow/modbus"
 	"github.com/goburrow/serial"
+)
+
+const (
+	TcpMethod = "tcp"
+	RtuMethod = "rtu"
 )
 
 type handler interface {
@@ -19,16 +24,17 @@ type MbClient struct {
 	handler
 }
 
-func NewClient(cfg SlaveConfig) *MbClient {
+func NewClient(cfg SlaveConfig) (*MbClient, error) {
 	var cli MbClient
-	if strings.HasPrefix(cfg.Address, "tcp://") {
+	switch cfg.Method {
+	case TcpMethod:
 		// Modbus TCP
 		h := modbus.NewTCPClientHandler(cfg.Address[6:])
 		h.SlaveId = cfg.ID
 		h.Timeout = cfg.Timeout
 		h.IdleTimeout = cfg.IdleTimeout
 		cli.handler = h
-	} else {
+	case RtuMethod:
 		// Modbus RTU
 		h := modbus.NewRTUClientHandler(cfg.Address)
 		h.BaudRate = cfg.BaudRate
@@ -47,8 +53,10 @@ func NewClient(cfg SlaveConfig) *MbClient {
 			RxDuringTx:         cfg.RS485.RxDuringTx,
 		}
 		cli.handler = h
+	default:
+		return nil, errors.Errorf("method not supported")
 	}
-	return &cli
+	return &cli, nil
 }
 
 func (m *MbClient) Connect() error {

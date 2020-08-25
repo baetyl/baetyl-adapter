@@ -4,27 +4,21 @@ import (
 	"bytes"
 	"encoding/binary"
 	"encoding/json"
+
 	"github.com/256dpi/gomqtt/packet"
 	"github.com/baetyl/baetyl-go/v2/errors"
 	"github.com/baetyl/baetyl-go/v2/log"
 	"github.com/baetyl/baetyl-go/v2/mqtt"
 )
 
-type Item struct {
-	Function int     `yaml:"function" json:"function"`
-	Address  uint16  `yaml:"address" json:"address"`
-	Quantity uint16  `yaml:"quantity" json:"quantity"`
-	Value    []int16 `yaml:"value" json:"value"`
-}
-
-type Data struct {
-	SlaveID byte   `yaml:"slaveid" json:"slaveid"`
-	Items   []Item `yaml:"items" json:"items"`
-}
-
 type observer struct {
 	slaves map[byte]*Slave
 	log    *log.Logger
+}
+
+type CtrData struct {
+	SlaveID    byte                   `yaml:"slaveid" json:"slaveid"`
+	Attributes map[string]interface{} `yaml:"attr" json:"attr"`
 }
 
 func NewObserver(slaves map[byte]*Slave, log *log.Logger) mqtt.Observer {
@@ -35,39 +29,50 @@ func NewObserver(slaves map[byte]*Slave, log *log.Logger) mqtt.Observer {
 }
 
 func (o *observer) OnPublish(pkt *packet.Publish) error {
-	var datas []Data
-	err := json.Unmarshal(pkt.Message.Payload, &datas)
+	var ctrData CtrData
+	err := json.Unmarshal(pkt.Message.Payload, &ctrData)
 	if err != nil {
 		return errors.Trace(err)
 	}
-	for _, data := range datas {
-		if slave, ok := o.slaves[data.SlaveID]; !ok {
-			o.log.Error("device to write data not exist", log.Any("id", data.SlaveID))
-		} else {
-			if err := o.Write(slave, data); err != nil {
-				o.log.Error("write data failed", log.Any("data", data), log.Error(err))
-			}
-		}
+	var slave *Slave
+	slave, ok := o.slaves[ctrData.SlaveID]
+	if !ok {
+		o.log.Error("device to write data not exist", log.Any("id", ctrData.SlaveID))
+		return errors.Errorf("device to write data not exist")
+	}
+	if err := o.Write(slave, ctrData.Attributes); err != nil {
+		return errors.Trace(err)
 	}
 	return nil
 }
 
-func (o *observer) Write(slave *Slave, data Data) error {
-	for _, item := range data.Items {
-		value, err := validateAndTransform(item)
-		if err != nil {
-			return err
+func (o *observer) Write(slave *Slave, attr map[string]interface{}) error {
+	config, ok := configRecoder[slave.cfg.ID]
+	if !ok {
+		o.log.Error("map config of slave id not exist", log.Any("id", slave.cfg.ID))
+		return errors.Errorf("map config of slave id [%d] not exist", slave.cfg.ID)
+	}
+	for key, val := range attr {
+		cfg, ok := config[key]
+		if !ok {
+			o.log.Warn("ignore key whose map config not exist", log.Any("key", key))
+			continue
 		}
-		switch item.Function {
+		value, err := validateAndTransform(val, cfg.Field.Type)
+		if err != nil {
+			o.log.Warn("ignore illegal data type of val", log.Any("value", val), log.Any("type", cfg.Field.Type))
+			continue
+		}
+		switch cfg.Function {
 		case DiscreteInput:
 		case InputRegister:
-			return errors.Errorf("illegal function code: [%v]", data)
+			return errors.Errorf("can not write data with illegal function code: [%d]", cfg.Function)
 		case Coil:
-			if _, err := slave.client.WriteMultipleCoils(item.Address, item.Quantity, value); err != nil {
+			if _, err := slave.client.WriteMultipleCoils(cfg.Address, cfg.Quantity, value); err != nil {
 				return err
 			}
 		case HoldingRegister:
-			if _, err := slave.client.WriteMultipleRegisters(item.Address, item.Quantity, value); err != nil {
+			if _, err := slave.client.WriteMultipleRegisters(cfg.Address, cfg.Quantity, value); err != nil {
 				return err
 			}
 		}
@@ -75,27 +80,53 @@ func (o *observer) Write(slave *Slave, data Data) error {
 	return nil
 }
 
-func validateAndTransform(item Item) ([]byte, error) {
-	if int(item.Quantity) != len(item.Value) {
-		return nil, errors.Errorf("quantity not equal to value length")
+func validateAndTransform(source interface{}, fieldType string) ([]byte, error) {
+	var value interface{}
+	var ok bool
+	var num float64
+	if fieldType != Bool {
+		num, ok = source.(float64)
 	}
-	if item.Function == Coil {
-		b := make([]byte, (len(item.Value)+7)/8)
-		for i, x := range item.Value {
-			if x != 0 {
-				b[i/8] |= 0x1 << uint(i%8)
-			}
-		}
-		return b, nil
-	} else if item.Function == HoldingRegister {
-		buf := bytes.NewBuffer(nil)
-		err := binary.Write(buf, binary.BigEndian, item.Value)
-		if err != nil {
-			return nil, err
-		}
-		return buf.Bytes(), nil
+	switch fieldType {
+	case Bool:
+		var b bool
+		b, ok = source.(bool)
+		value = b
+	case Int16:
+		i16 := int16(num)
+		value = i16
+	case UInt16:
+		u16 := uint16(num)
+		value = u16
+	case Int32:
+		i32 := int32(num)
+		value = i32
+	case UInt32:
+		u32 := uint32(num)
+		value = u32
+	case Int64:
+		i64 := int64(num)
+		value = i64
+	case UInt64:
+		u64 := uint64(num)
+		value = u64
+	case Float32:
+		f32 := float32(num)
+		value = f32
+	case Float64:
+		value = num
+	default:
+		return nil, errors.Errorf("unsupported field type [%s]", fieldType)
 	}
-	return nil, nil
+	if !ok {
+		return nil, errors.Errorf("value [%v] not compatible with type [%s] ", source, fieldType)
+	}
+	buf := bytes.NewBuffer(nil)
+	err := binary.Write(buf, binary.BigEndian, value)
+	if err != nil {
+		return nil, errors.Trace(err)
+	}
+	return buf.Bytes(), nil
 }
 
 func (o *observer) OnPuback(pkt *packet.Puback) error {
