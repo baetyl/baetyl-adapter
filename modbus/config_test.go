@@ -17,7 +17,7 @@ func TestConfig(t *testing.T) {
 	confString := `
 slaves:
 - id: 1
-  method: tcp
+  mode: tcp
   address: tcp://127.0.0.1:502
 jobs:
 - slaveid: 1
@@ -77,7 +77,7 @@ jobs:
 	cfg2 := Config{
 		Slaves: []SlaveConfig{{
 			ID:          1,
-			Method:      "tcp",
+			Mode:        "tcp",
 			Address:     "tcp://127.0.0.1:502",
 			Timeout:     10 * time.Second,
 			IdleTimeout: 1 * time.Minute,

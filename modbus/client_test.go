@@ -19,7 +19,7 @@ func TestClient(t *testing.T) {
 
 	cfg = SlaveConfig{
 		ID:      1,
-		Method:  TcpMethod,
+		Mode:    ModeTcp,
 		Address: "tcp://127.0.0.1:50200",
 	}
 	client, err = NewClient(cfg)
@@ -33,7 +33,7 @@ func TestClient(t *testing.T) {
 
 	cfg = SlaveConfig{
 		ID:      2,
-		Method:  TcpMethod,
+		Mode:    ModeTcp,
 		Address: "tcp://127.0.0.1:50201",
 	}
 	client, err = NewClient(cfg)

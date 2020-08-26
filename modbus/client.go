@@ -8,9 +8,11 @@ import (
 	"github.com/goburrow/serial"
 )
 
+type Mode string
+
 const (
-	TcpMethod = "tcp"
-	RtuMethod = "rtu"
+	ModeTcp Mode = "tcp"
+	ModeRtu Mode = "rtu"
 )
 
 type handler interface {
@@ -26,15 +28,15 @@ type MbClient struct {
 
 func NewClient(cfg SlaveConfig) (*MbClient, error) {
 	var cli MbClient
-	switch cfg.Method {
-	case TcpMethod:
+	switch cfg.Mode {
+	case ModeTcp:
 		// Modbus TCP
 		h := modbus.NewTCPClientHandler(cfg.Address[6:])
 		h.SlaveId = cfg.ID
 		h.Timeout = cfg.Timeout
 		h.IdleTimeout = cfg.IdleTimeout
 		cli.handler = h
-	case RtuMethod:
+	case ModeRtu:
 		// Modbus RTU
 		h := modbus.NewRTUClientHandler(cfg.Address)
 		h.BaudRate = cfg.BaudRate

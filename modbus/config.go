@@ -50,8 +50,8 @@ type Time struct {
 type SlaveConfig struct {
 	// ID slave id
 	ID byte `yaml:"id" json:"id"`
-	// Method method to connect device
-	Method string `yaml:"method" json:"method" validate:"regexp=(tcp|rtu)" default:"rtu"`
+	// Mode mode of connecting
+	Mode Mode `yaml:"mode" json:"mode" validate:"regexp=(tcp|rtu)" default:"rtu"`
 	// Address Device path (/dev/ttyS0)
 	Address string `yaml:"address" json:"address" default:"/dev/ttyS0"`
 	// Timeout Read (Write) timeout.
