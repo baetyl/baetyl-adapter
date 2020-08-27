@@ -14,15 +14,16 @@ func TestClient(t *testing.T) {
 	slave.StartTCPSlave()
 
 	cfg := SlaveConfig{}
-	client := NewClient(cfg)
-	err := client.Connect()
+	client, err := NewClient(cfg)
 	assert.Error(t, err)
 
 	cfg = SlaveConfig{
 		ID:      1,
+		Mode:    ModeTcp,
 		Address: "tcp://127.0.0.1:50200",
 	}
-	client = NewClient(cfg)
+	client, err = NewClient(cfg)
+	assert.NoError(t, err)
 	err = client.Connect()
 	assert.NoError(t, err)
 	err = client.Close()
@@ -32,9 +33,11 @@ func TestClient(t *testing.T) {
 
 	cfg = SlaveConfig{
 		ID:      2,
+		Mode:    ModeTcp,
 		Address: "tcp://127.0.0.1:50201",
 	}
-	client = NewClient(cfg)
+	client, err = NewClient(cfg)
+	assert.NoError(t, err)
 	err = client.Connect()
 	assert.Error(t, err)
 	slave.Stop()

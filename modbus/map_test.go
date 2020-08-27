@@ -5,7 +5,7 @@ import (
 	"encoding/binary"
 	"testing"
 
-	"github.com/baetyl/baetyl-go/log"
+	"github.com/baetyl/baetyl-go/v2/log"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -14,9 +14,11 @@ func TestMapRead(t *testing.T) {
 	server.StartTCPSlave()
 	slaveCfg := SlaveConfig{
 		ID:      1,
+		Mode:    ModeTcp,
 		Address: "tcp://127.0.0.1:50200",
 	}
-	client := NewClient(slaveCfg)
+	client, err := NewClient(slaveCfg)
+	assert.NoError(t, err)
 	client.Connect()
 	slave := NewSlave(slaveCfg, client)
 	log := log.With(log.Any("modbus", "map_test"))
@@ -95,9 +97,11 @@ func TestMapCollect(t *testing.T) {
 
 	cfg := SlaveConfig{
 		ID:      1,
+		Mode:    ModeTcp,
 		Address: "tcp://127.0.0.1:50200",
 	}
-	client := NewClient(cfg)
+	client, err := NewClient(cfg)
+	assert.NoError(t, err)
 	client.Connect()
 	defer client.Close()
 	slave := NewSlave(cfg, client)
@@ -134,7 +138,7 @@ func TestMapCollect(t *testing.T) {
 }
 
 func TestParse(t *testing.T) {
-	m := NewMap(MapConfig{}, NewSlave(SlaveConfig{}, NewClient(SlaveConfig{})), log.With(log.Any("modbus", "test")))
+	m := NewMap(MapConfig{}, NewSlave(SlaveConfig{}, nil), log.With(log.Any("modbus", "test")))
 	cfgs := []MapConfig{
 		{Field: Field{Type: Bool}},
 		{Field: Field{Type: Int16}},

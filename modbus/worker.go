@@ -4,8 +4,9 @@ import (
 	"encoding/binary"
 	"encoding/json"
 	"fmt"
-	"github.com/baetyl/baetyl-go/log"
 	"time"
+
+	"github.com/baetyl/baetyl-go/v2/log"
 )
 
 type Worker struct {
@@ -42,7 +43,7 @@ func (w *Worker) Execute() error {
 	if w.job.Encoding == BinaryEncoding {
 		tp := make([]byte, 12)
 		binary.BigEndian.PutUint64(tp, uint64(ts))
-		tp[8] = w.job.SlaveId
+		tp[8] = w.job.SlaveID
 		pld = append(pld, tp...)
 	} else if w.job.Encoding == JsonEncoding {
 		if w.job.Time.Type == IntegerTime {
@@ -50,7 +51,7 @@ func (w *Worker) Execute() error {
 		} else if w.job.Time.Type == StringTime {
 			res[w.job.Time.Name] = now.Format(w.job.Time.Format)
 		}
-		res[SlaveId] = w.job.SlaveId
+		res[SlaveId] = w.job.SlaveID
 		var err error
 		pld, err = json.Marshal(res)
 		if err != nil {
@@ -58,6 +59,7 @@ func (w *Worker) Execute() error {
 		}
 	}
 
+	data := make(map[string]interface{})
 	for _, m := range w.maps {
 		p, err := m.Collect()
 		if err != nil {
@@ -70,9 +72,10 @@ func (w *Worker) Execute() error {
 			if err != nil {
 				return err
 			}
-			res[m.cfg.Field.Name] = pa
+			data[m.cfg.Field.Name] = pa
 		}
 	}
+	res["attr"] = data
 
 	if w.job.Encoding == JsonEncoding {
 		var err error
