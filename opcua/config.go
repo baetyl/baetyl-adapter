@@ -10,7 +10,7 @@ type Config struct {
 }
 
 type DeviceConfig struct {
-	ID          byte        `yaml:"id" json:"id"`
+	ID          byte          `yaml:"id" json:"id"`
 	Endpoint    string        `yaml:"endpoint" json:"endpoint"`
 	Timeout     time.Duration `yaml:"timeout" json:"timeout" default:"10s"`
 	Security    Security      `yaml:"security" json:"security"`
@@ -34,7 +34,7 @@ type Certificate struct {
 }
 
 type Job struct {
-	DeviceID   byte        `yaml:"deviceid" json:"deviceid"`
+	DeviceID   byte          `yaml:"deviceid" json:"deviceid"`
 	Time       Time          `yaml:"time" json:"time" default:"{\"name\":\"time\", \"type\":\"integer\"}"`
 	Interval   time.Duration `yaml:"interval" json:"interval" default:"20s"`
 	Properties []Property    `yaml:"properties" json:"properties"`

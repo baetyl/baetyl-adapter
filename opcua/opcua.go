@@ -58,7 +58,7 @@ func NewOpcua(ctx context.Context, cfg Config) (*Opcua, error) {
 	for _, job := range cfg.Jobs {
 		if device := devices[job.DeviceID]; device != nil {
 			if job.Publish.Topic == "" {
-				job.Publish.Topic = fmt.Sprintf("%s/%s", ctx.ServiceName(), job.DeviceID)
+				job.Publish.Topic = fmt.Sprintf("%s/%d", ctx.ServiceName(), job.DeviceID)
 			}
 			sender := NewSender(job.Publish, mqtt)
 			w := NewWorker(job, device, sender, log.With(log.Any("deviceid", job.DeviceID)))

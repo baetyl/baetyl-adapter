@@ -49,7 +49,7 @@ func (o *observer) Write(device *Device, attr map[string]interface{}) error {
 	config, ok := configRecoder[device.cfg.ID]
 	if !ok {
 		o.log.Error("map config of device id not exist", log.Any("id", device.cfg.ID))
-		return errors.Errorf("map config of device id [%s] not exist", device.cfg.ID)
+		return errors.Errorf("map config of device id [%d] not exist", device.cfg.ID)
 	}
 	for key, val := range attr {
 		cfg, ok := config[key]
