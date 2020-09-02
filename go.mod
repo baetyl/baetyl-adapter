@@ -9,6 +9,7 @@ require (
 	github.com/goburrow/modbus v0.1.0
 	github.com/goburrow/serial v0.1.0
 	github.com/golang/mock v1.3.1
+	github.com/gopcua/opcua v0.1.12
 	github.com/stretchr/testify v1.5.1
 	github.com/tbrandon/mbserver v0.0.0-20170611213546-993e1772cc62
 	gopkg.in/validator.v2 v2.0.0-20191107172027-c3144fdedc21
