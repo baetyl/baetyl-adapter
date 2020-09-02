@@ -1,4 +1,4 @@
-package opc
+package opcua
 
 import (
 	"encoding/json"
@@ -11,16 +11,16 @@ import (
 )
 
 type observer struct {
-	devices map[string]*Device
+	devices map[byte]*Device
 	log     *log.Logger
 }
 
 type CtrData struct {
-	DeviceID   string                 `yaml:"deviceid" json:"deviceid"`
+	DeviceID   byte                   `yaml:"deviceid" json:"deviceid"`
 	Attributes map[string]interface{} `yaml:"attr" json:"attr"`
 }
 
-func NewObserver(devices map[string]*Device, log *log.Logger) mqtt.Observer {
+func NewObserver(devices map[byte]*Device, log *log.Logger) mqtt.Observer {
 	return &observer{
 		devices: devices,
 		log:     log,
@@ -57,13 +57,13 @@ func (o *observer) Write(device *Device, attr map[string]interface{}) error {
 			o.log.Warn("ignore key whose property config not exist", log.Any("key", key))
 			continue
 		}
-		value, err := validateAndTransform(val, cfg.Type)
+		value, err := value2Variant(val, cfg.Type)
 		if err != nil {
 			o.log.Warn("ignore illegal data type of val", log.Any("value", val), log.Any("type", cfg.Type))
 			continue
 		}
 
-		id, err := ua.ParseNodeID(device.cfg.ID)
+		id, err := ua.ParseNodeID(cfg.NodeID)
 		if err != nil {
 			return errors.Trace(err)
 		}
@@ -79,7 +79,7 @@ func (o *observer) Write(device *Device, attr map[string]interface{}) error {
 				},
 			},
 		}
-		_, err = device.opcClient.Write(req)
+		_, err = device.opcuaClient.Write(req)
 		if err != nil {
 			return errors.Trace(err)
 		}

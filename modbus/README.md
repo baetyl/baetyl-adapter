@@ -250,8 +250,8 @@ logger:
   "slaveid": 1,
   "attr": {
     "switch": true,
-    "humidity": 23.43 
-  },
+    "humidity": 23.43
+  }
 }
 ```
 和读取时的数据结构类似，slaveid标识需要反控的从设备id, 与配置文件中定义的slaveid一致。attr域中包含了期望

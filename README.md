@@ -10,3 +10,4 @@ All modules that synchronize data with the clients, such as mqtt, modbus, coap, 
 
 ## offical modules
 - [modbus](modbus/README.md)
+- [opcua](opcua/README.md)

@@ -1,24 +1,24 @@
 package main
 
 import (
-	"github.com/baetyl/baetyl-adapter/opc"
-
 	"github.com/baetyl/baetyl-go/v2/context"
+
+	"github.com/baetyl/baetyl-adapter/opcua"
 )
 
 func main() {
 	// Running module in baetyl context
 	context.Run(func(ctx context.Context) error {
-		var cfg opc.Config
+		var cfg opcua.Config
 		// load custom config
 		if err := ctx.LoadCustomConfig(&cfg); err != nil {
 			return err
 		}
-		opc, err := opc.NewOpc(ctx, cfg)
+		o, err := opcua.NewOpcua(ctx, cfg)
 		if err != nil {
 			return err
 		}
-		defer opc.Close()
+		defer o.Close()
 		ctx.Wait()
 		return nil
 	})

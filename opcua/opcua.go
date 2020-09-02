@@ -1,4 +1,4 @@
-package opc
+package opcua
 
 import (
 	"fmt"
@@ -10,18 +10,18 @@ import (
 	"github.com/baetyl/baetyl-go/v2/mqtt"
 )
 
-var configRecoder = make(map[string]map[string]Property)
+var configRecoder = make(map[byte]map[string]Property)
 
-type Opc struct {
+type Opcua struct {
 	cfg     Config
 	ctx     context.Context
-	devices map[string]*Device
+	devices map[byte]*Device
 	logger  *log.Logger
 	mqtt    *mqtt.Client
 }
 
-func NewOpc(ctx context.Context, cfg Config) (*Opc, error) {
-	devices := map[string]*Device{}
+func NewOpcua(ctx context.Context, cfg Config) (*Opcua, error) {
+	devices := map[byte]*Device{}
 	for _, dCfg := range cfg.Devices {
 		dev, err := NewDevice(dCfg)
 		if err != nil {
@@ -47,7 +47,7 @@ func NewOpc(ctx context.Context, cfg Config) (*Opc, error) {
 	if err := mqtt.Start(observer); err != nil {
 		return nil, err
 	}
-	opc := &Opc{
+	o := &Opcua{
 		cfg:     cfg,
 		ctx:     ctx,
 		mqtt:    mqtt,
@@ -77,12 +77,12 @@ func NewOpc(ctx context.Context, cfg Config) (*Opc, error) {
 		}
 	}
 	for _, worker := range ws {
-		go opc.working(worker)
+		go o.working(worker)
 	}
-	return opc, nil
+	return o, nil
 }
 
-func (o *Opc) working(w *Worker) {
+func (o *Opcua) working(w *Worker) {
 	ticker := time.NewTicker(w.job.Interval)
 	defer ticker.Stop()
 	for {
@@ -99,6 +99,6 @@ func (o *Opc) working(w *Worker) {
 	}
 }
 
-func (o *Opc) Close() error {
+func (o *Opcua) Close() error {
 	return nil
 }

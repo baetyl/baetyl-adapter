@@ -1,11 +1,11 @@
-package opc
+package opcua
 
 import (
 	"github.com/256dpi/gomqtt/packet"
 	"github.com/baetyl/baetyl-go/v2/mqtt"
 )
 
-//go:generate mockgen -destination=mock/sender.go -package=mock github.com/baetyl/baetyl-adapter/opc Sender
+//go:generate mockgen -destination=mock/sender.go -package=mock github.com/baetyl/baetyl-adapter/opcua Sender
 
 type Sender interface {
 	Send(msg []byte) error

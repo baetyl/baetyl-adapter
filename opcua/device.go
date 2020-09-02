@@ -1,4 +1,4 @@
-package opc
+package opcua
 
 import (
 	"context"
@@ -9,8 +9,8 @@ import (
 )
 
 type Device struct {
-	opcClient *opcua.Client
-	cfg       DeviceConfig
+	opcuaClient *opcua.Client
+	cfg         DeviceConfig
 }
 
 func NewDevice(cfg DeviceConfig) (*Device, error) {
@@ -51,5 +51,5 @@ func NewDevice(cfg DeviceConfig) (*Device, error) {
 	if err := client.Connect(ctx); err != nil {
 		return nil, errors.Trace(err)
 	}
-	return &Device{cfg: cfg, opcClient: client}, nil
+	return &Device{cfg: cfg, opcuaClient: client}, nil
 }

@@ -1,4 +1,4 @@
-package opc
+package opcua
 
 const (
 	SecondPrecision = "s"
@@ -16,4 +16,5 @@ const (
 	UInt64  = "uint64"
 	Float32 = "float32"
 	Float64 = "float64"
+	String  = "string"
 )

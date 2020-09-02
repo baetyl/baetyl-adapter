@@ -1,7 +1,6 @@
-package opc
+package opcua
 
 import (
-	"context"
 	"encoding/json"
 	"fmt"
 	"time"
@@ -51,13 +50,14 @@ func (w *Worker) Execute() error {
 			w.logger.Error("failed to read", log.Error(err))
 			continue
 		}
-		value, err := parse(val)
+		value, err := variant2Value(p.Type, val)
 		if err != nil {
 			w.logger.Error("failed to parse", log.Error(err))
 			continue
 		}
 		data[p.Name] = value
 	}
+	// TODO if length of data equal to 0, do not send msg ?
 	res["attr"] = data
 
 	pld, err := json.Marshal(res)
@@ -83,23 +83,24 @@ func (w *Worker) read(prop Property) (*ua.Variant, error) {
 		NodesToRead:        []*ua.ReadValueID{{NodeID: id}},
 		TimestampsToReturn: ua.TimestampsToReturnNeither,
 	}
-	resp, err := w.device.opcClient.Read(req)
+	resp, err := w.device.opcuaClient.Read(req)
 	if err != nil {
 		w.logger.Error("failed to read", log.Any("nodeid", prop.NodeID), log.Error(err))
-		w.device.opcClient.Close()
-		var ctx, cancel = context.WithTimeout(context.Background(), w.device.cfg.Timeout)
-		err2 := w.device.opcClient.Connect(ctx)
-		if err2 != nil {
-			w.logger.Error("failed to reconnect: ", log.Any("deviceid", w.device.cfg.ID), log.Error(err2))
-			return nil, err2
-		} else {
-			resp, err = w.device.opcClient.Read(req)
-			if err != nil {
-				w.logger.Error("failed to read after reconnect", log.Any("nodeid", prop.NodeID), log.Error(err))
-				return nil, err
-			}
-		}
-		cancel()
+		return nil, err
+		//w.device.opcuaClient.Close()
+		//var ctx, cancel = context.WithTimeout(context.Background(), w.device.cfg.Timeout)
+		//defer cancel()
+		//err2 := w.device.opcuaClient.Connect(ctx)
+		//if err2 != nil {
+		//	w.logger.Error("failed to reconnect: ", log.Any("deviceid", w.device.cfg.ID), log.Error(err2))
+		//	return nil, err2
+		//} else {
+		//	resp, err = w.device.opcuaClient.Read(req)
+		//	if err != nil {
+		//		w.logger.Error("failed to read after reconnect", log.Any("nodeid", prop.NodeID), log.Error(err))
+		//		return nil, err
+		//	}
+		//}
 	}
 	if resp == nil || len(resp.Results) == 0 {
 		w.logger.Error("invalid read response", log.Any("nodeid", prop.NodeID))

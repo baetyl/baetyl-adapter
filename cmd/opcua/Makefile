@@ -1,4 +1,4 @@
-MODULE:=baetyl-opc
+MODULE:=baetyl-opcua
 SRC_FILES:=$(shell find . -type f -name '*.go')
 PLATFORM_ALL:=darwin/amd64 linux/amd64 linux/arm64 linux/386 linux/arm/v7
 

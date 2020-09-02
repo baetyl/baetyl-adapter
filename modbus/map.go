@@ -55,16 +55,6 @@ func (m *Map) read() (results []byte, err error) {
 	return results, err
 }
 
-func (m *Map) write(function int, address, quantity uint16, value int) error {
-	switch function {
-	case DiscreteInput:
-	case InputRegister:
-		return errors.Errorf("illegal function code")
-
-	}
-	return nil
-}
-
 func (m *Map) Collect() ([]byte, error) {
 	res, err := m.read()
 	if err != nil {
