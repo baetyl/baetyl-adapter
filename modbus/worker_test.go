@@ -18,7 +18,7 @@ func TestExecute(t *testing.T) {
 
 	slaveCfg := SlaveConfig{
 		ID:      1,
-		Mode:    ModeTcp,
+		Mode:    string(ModeTcp),
 		Address: "tcp://127.0.0.1:50200",
 	}
 	client, err := NewClient(slaveCfg)

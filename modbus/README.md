@@ -20,7 +20,7 @@ slave连接可以通过TCP或RTU模式连接，默认为RTU模式。此外，模
    ```yaml
    id: 1 # 设备id
    address: tcp://127.0.0.1:502 # 设备地址
-   mode: tcp
+   mode: tcp # tcp模式
    timeout: 10s # 超时时间，默认10s
    idletimeout: 1m # 空闲tcp连接保留时间，默认1分钟
    ```
@@ -28,7 +28,7 @@ slave连接可以通过TCP或RTU模式连接，默认为RTU模式。此外，模
    ```yaml
    id: 1 # 设备id
    address: /dev/ttyUSB4 # 设备地址   timeout: 10s # 超时时间，默认10s
-   mode: rtu
+   mode: rtu # rtu模式
    idletimeout: 1m # 空闲tcp连接保持时间，默认1分钟
    baudrate: 19200 # 波特率 默认为19200
    databits: 8 # 数据位，可选(5,6,7,8) 默认为8 
@@ -134,7 +134,7 @@ broker:
 slaves:
   - id: 1 # slave id
     address: tcp://127.0.0.1:502 # 基于tcp连接slave时的地址
-    mode: tcp
+    mode: tcp # tcp模式
 jobs:
   - slaveid: 1 # 采集任务的对应设备
     encoding: binary # 指定仅采集数据，数据以二进制流发送
@@ -160,7 +160,7 @@ broker:
 slaves:
   - id: 1 # slave id
     address: tcp://127.0.0.1:502 # 基于tcp连接slave时的地址
-    mode: tcp
+    mode: tcp # tcp模式
 jobs:
   - slaveid: 1 # 采集任务的对应设备
     encoding: json # 指定采集解析数据，数据以JSON发送，默认为json
@@ -220,6 +220,7 @@ broker:
       - topic: control # 反控向从设备写入数据时订阅的主题
 slaves:
   - id: 1 # slave id
+    mode: tcp # tcp模式
     address: tcp://127.0.0.1:502 # 基于tcp连接slave时的地址
 jobs:
   - slaveid: 1 # 采集任务的对应设备

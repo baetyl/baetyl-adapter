@@ -28,7 +28,7 @@ type MbClient struct {
 
 func NewClient(cfg SlaveConfig) (*MbClient, error) {
 	var cli MbClient
-	switch cfg.Mode {
+	switch Mode(cfg.Mode) {
 	case ModeTcp:
 		// Modbus TCP
 		h := modbus.NewTCPClientHandler(cfg.Address[6:])
