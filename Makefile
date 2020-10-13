@@ -1,4 +1,4 @@
-MODULES?=modbus
+MODULES?=modbus opcua
 
 OUTPUT_MODS:=$(MODULES:%=cmd/%)
 IMAGE_MODS:=$(MODULES:%=cmd/%)
