@@ -18,7 +18,7 @@ devices配置项用于配置与模块连接的设备, 支持配置多个设备, 
 另外，模块也支持自动重连机制，即设备因故障与模块连接断开后，从故障恢复后，模块会自动重连设备并继续读取数据。
    ```yaml
    id: 1 # 设备id
-   endpoint: opc.tcp://test.local:53530/OPCUA/Server # 设备端点
+   endpoint: opc.tcp://<ip>:53530/OPCUA/Server # 设备端点
    timeout: 20s # 默认为10s
    security:
      policy: None # 可选None、Basic128Rsa15、Basic256、Basic256Sha256、Aes128Sha256RsaOaep、Aes256Sha256RsaPss
@@ -99,7 +99,7 @@ broker:
   clientid: opcua-1 # 连接mqtt hub时使用的client id，基于baetyl框架运行时可不配置
 devices:
   - id: 1 # 设备id
-    address: opc.tcp://test.local:53530/OPCUA/Server # 设备端点 
+    endpoint: opc.tcp://<ip>:53530/OPCUA/Server # 设备端点 
 jobs:
   - deviceid: 1 # 读取任务的对应设备
     properties:
@@ -151,7 +151,7 @@ broker:
       - topic: control # 反控向从设备写入数据时订阅的主题
 devices:
   - id: 1 # 设备id
-    address: opc.tcp://test.local:53530/OPCUA/Server # 设备端点 
+    endpoint: opc.tcp://<ip>:53530/OPCUA/Server # 设备端点 
 jobs:
   - deviceid: 1 # 读取任务的对应设备
     properties:
