@@ -25,14 +25,8 @@ type Job struct {
 	SlaveID byte `yaml:"slaveid" json:"slaveid"`
 	// Interval the interval between task execution
 	Interval time.Duration `yaml:"interval" json:"interval" default:"5s"`
-	// Encoding whether collect data and send binary stream or collect and parse data send JSON data
-	Encoding string `yaml:"encoding" json:"encoding" validate:"regexp=^(binary|json)?$" default:"json"`
-	// Time time format
-	Time Time `yaml:"time" json:"time" default:"{\"name\":\"time\", \"type\":\"integer\"}"`
 	// Maps definition of data points
 	Maps []MapConfig `yaml:"maps" json:"maps"`
-	// Publish publish topic of collected data
-	Publish Publish `yaml:"publish" json:"publish" validate:"nonnil"`
 }
 
 type Field struct {
@@ -48,6 +42,7 @@ type Time struct {
 
 // SlaveConfig modbus slave device configuration
 type SlaveConfig struct {
+	Device string `yaml:"device" json:"device"`
 	// ID slave id
 	ID byte `yaml:"id" json:"id"`
 	// Mode mode of connecting
@@ -68,21 +63,6 @@ type SlaveConfig struct {
 	// Parity: N - None, E - Even, O - Odd (default E)
 	// (The use of no parity requires 2 stop bits.)
 	Parity string `yaml:"parity" json:"parity" default:"E" validate:"regexp=^(E|N|O)?$"`
-	// RS485 Configuration related to RS485
-	RS485 struct {
-		// Enabled Enable RS485 support
-		Enabled bool `yaml:"enabled" json:"enabled"`
-		// DelayRtsBeforeSend Delay RTS prior to send
-		DelayRtsBeforeSend time.Duration `yaml:"delay_rts_before_send" json:"delay_rts_before_send"`
-		// DelayRtsAfterSend Delay RTS after send
-		DelayRtsAfterSend time.Duration `yaml:"delay_rts_after_send" json:"delay_rts_after_send"`
-		// RtsHighDuringSend Set RTS high during send
-		RtsHighDuringSend bool `yaml:"rts_high_during_send" json:"rts_high_during_send"`
-		// RtsHighAfterSend Set RTS high after send
-		RtsHighAfterSend bool `yaml:"rts_high_after_send" json:"rts_high_after_send"`
-		// RxDuringTx Rx during Tx
-		RxDuringTx bool `yaml:"rx_during_tx" json:"rx_during_tx"`
-	} `yaml:"rs485" json:"rs485"`
 }
 
 // MapConfig map point configuration
@@ -110,15 +90,6 @@ func validateJobs(v interface{}, param string) error {
 	}
 	for _, job := range jobs {
 		for _, m := range job.Maps {
-			if job.Encoding == JsonEncoding {
-				if m.Field.Name == "" || m.Field.Type == "" {
-					return fmt.Errorf("field name or type of map %+v shall not be empty when encoding is json", m)
-				}
-			} else if job.Encoding == BinaryEncoding {
-				if m.Quantity == 0 {
-					return fmt.Errorf("quantity of map %+v shall not be zero when encoding is binary", m)
-				}
-			}
 			if _, ok := SysName[m.Field.Name]; ok {
 				return fmt.Errorf("please use another name, '%s' is reserved by the system", m.Field.Name)
 			}
@@ -133,9 +104,7 @@ func validateJobs(v interface{}, param string) error {
 func (job *Job) SetDefaults() {
 	var ms []MapConfig
 	for _, m := range job.Maps {
-		if job.Encoding == JsonEncoding {
-			populateQuantityIfNeeds(&m)
-		}
+		populateQuantityIfNeeds(&m)
 		ms = append(ms, m)
 	}
 	job.Maps = ms

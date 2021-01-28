@@ -1,0 +1,3 @@
+FROM busybox
+COPY modbus /bin/
+ENTRYPOINT ["modbus"]

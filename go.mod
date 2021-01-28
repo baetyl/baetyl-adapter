@@ -3,11 +3,10 @@ module github.com/baetyl/baetyl-adapter
 go 1.13
 
 require (
-	github.com/256dpi/gomqtt v0.14.2
-	github.com/baetyl/baetyl-go/v2 v2.0.26
-	github.com/creasty/defaults v1.4.0
+	github.com/256dpi/gomqtt v0.14.3
+	github.com/baetyl/baetyl-go/v2 v2.1.26
 	github.com/goburrow/modbus v0.1.0
-	github.com/goburrow/serial v0.1.0
+	github.com/goburrow/serial v0.1.0 // indirect
 	github.com/golang/mock v1.3.1
 	github.com/gopcua/opcua v0.1.12
 	github.com/stretchr/testify v1.5.1

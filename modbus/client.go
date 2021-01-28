@@ -5,7 +5,6 @@ import (
 
 	"github.com/baetyl/baetyl-go/v2/errors"
 	"github.com/goburrow/modbus"
-	"github.com/goburrow/serial"
 )
 
 type Mode string
@@ -46,14 +45,6 @@ func NewClient(cfg SlaveConfig) (*MbClient, error) {
 		h.SlaveId = cfg.ID
 		h.Timeout = cfg.Timeout
 		h.IdleTimeout = cfg.IdleTimeout
-		h.RS485 = serial.RS485Config{
-			Enabled:            cfg.RS485.Enabled,
-			DelayRtsBeforeSend: cfg.RS485.DelayRtsBeforeSend,
-			DelayRtsAfterSend:  cfg.RS485.DelayRtsAfterSend,
-			RtsHighDuringSend:  cfg.RS485.RtsHighDuringSend,
-			RtsHighAfterSend:   cfg.RS485.RtsHighAfterSend,
-			RxDuringTx:         cfg.RS485.RxDuringTx,
-		}
 		cli.handler = h
 	default:
 		return nil, errors.Errorf("method not supported")

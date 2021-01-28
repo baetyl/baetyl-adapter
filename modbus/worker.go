@@ -1,94 +1,49 @@
 package modbus
 
 import (
-	"encoding/binary"
-	"encoding/json"
-	"fmt"
-	"time"
-
+	"github.com/baetyl/baetyl-go/v2/dmcontext"
+	"github.com/baetyl/baetyl-go/v2/errors"
 	"github.com/baetyl/baetyl-go/v2/log"
 )
 
 type Worker struct {
+	ctx    dmcontext.Context
+	device *dmcontext.DeviceInfo
 	job    Job
-	sender Sender
 	maps   []*Map
-	logger *log.Logger
+	log    *log.Logger
 }
 
-func NewWorker(job Job, slave *Slave, s Sender, logger *log.Logger) *Worker {
+func NewWorker(ctx dmcontext.Context, job Job, slave *Slave, device *dmcontext.DeviceInfo, log *log.Logger) *Worker {
 	w := &Worker{
+		ctx:    ctx,
 		job:    job,
-		sender: s,
-		logger: logger,
+		device: device,
+		log:    log,
 	}
 	for _, m := range job.Maps {
-		m := NewMap(m, slave, logger)
+		m := NewMap(m, slave, log)
 		w.maps = append(w.maps, m)
 	}
 	return w
 }
 
 func (w *Worker) Execute() error {
-	var pld []byte
-	res := map[string]interface{}{}
-
-	now := time.Now()
-	var ts int64
-	if w.job.Time.Precision == SecondPrecision {
-		ts = now.Unix()
-	} else if w.job.Time.Precision == NanoPrecision {
-		ts = now.UnixNano()
-	}
-	if w.job.Encoding == BinaryEncoding {
-		tp := make([]byte, 12)
-		binary.BigEndian.PutUint64(tp, uint64(ts))
-		tp[8] = w.job.SlaveID
-		pld = append(pld, tp...)
-	} else if w.job.Encoding == JsonEncoding {
-		if w.job.Time.Type == IntegerTime {
-			res[w.job.Time.Name] = ts
-		} else if w.job.Time.Type == StringTime {
-			res[w.job.Time.Name] = now.Format(w.job.Time.Format)
-		}
-		res[SlaveId] = w.job.SlaveID
-		var err error
-		pld, err = json.Marshal(res)
-		if err != nil {
-			return err
-		}
-	}
-
-	data := make(map[string]interface{})
+	r := make(map[string]interface{})
 	for _, m := range w.maps {
 		p, err := m.Collect()
 		if err != nil {
 			return err
 		}
-		if w.job.Encoding == BinaryEncoding {
-			pld = append(pld, p...)
-		} else if w.job.Encoding == JsonEncoding {
-			pa, err := m.Parse(p[4:])
-			if err != nil {
-				return err
-			}
-			data[m.cfg.Field.Name] = pa
-		}
-	}
-	res["attr"] = data
-
-	if w.job.Encoding == JsonEncoding {
-		var err error
-		pld, err = json.Marshal(res)
+		pa, err := m.Parse(p[4:])
 		if err != nil {
 			return err
 		}
+		r[m.cfg.Field.Name] = pa
 	}
-
-	if w.sender != nil {
-		if err := w.sender.Send(pld); err != nil {
-			return fmt.Errorf("failed to publish: %s", err.Error())
-		}
+	if err := w.ctx.ReportDeviceProperties(w.device, r); err != nil {
+		return errors.Trace(err)
 	}
+	w.log.Debug("report properties successfully", log.Any("content", r))
 	return nil
 }

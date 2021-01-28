@@ -15,6 +15,7 @@ const (
 	SysTime         = "time"
 
 	Bool    = "bool"
+	String  = "string"
 	Int16   = "int16"
 	UInt16  = "uint16"
 	Int32   = "int32"
