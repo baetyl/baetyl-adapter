@@ -3,7 +3,7 @@ package main
 import (
 	"github.com/baetyl/baetyl-go/v2/context"
 
-	"github.com/baetyl/baetyl-adapter/opcua"
+	"github.com/baetyl/baetyl-adapter/v2/opcua"
 )
 
 func main() {
