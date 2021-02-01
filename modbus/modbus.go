@@ -1,25 +1,36 @@
 package modbus
 
 import (
+	"bytes"
+	"encoding/binary"
 	"fmt"
+	"strconv"
 	"time"
 
-	"github.com/baetyl/baetyl-go/v2/context"
+	"github.com/baetyl/baetyl-go/v2/dmcontext"
 	"github.com/baetyl/baetyl-go/v2/errors"
-	"github.com/baetyl/baetyl-go/v2/log"
-	"github.com/baetyl/baetyl-go/v2/mqtt"
+	v2log "github.com/baetyl/baetyl-go/v2/log"
+	v1 "github.com/baetyl/baetyl-go/v2/spec/v1"
 )
 
-var configRecoder = make(map[byte]map[string]MapConfig)
+var (
+	ErrWorkerNotExist = errors.New("worker not exist")
+)
 
 type Modbus struct {
-	ctx    context.Context
-	mqtt   *mqtt.Client
-	logger *log.Logger
+	ctx    dmcontext.Context
+	log    *v2log.Logger
 	slaves map[byte]*Slave
+	ws     map[string]*Worker
 }
 
-func NewModbus(ctx context.Context, cfg Config) (*Modbus, error) {
+func NewModbus(ctx dmcontext.Context, cfg Config) (*Modbus, error) {
+	devices := ctx.GetAllDevices()
+	devMap := map[string]dmcontext.DeviceInfo{}
+	for _, dev := range devices {
+		devMap[dev.Name] = dev
+	}
+	log := ctx.Log().With(v2log.Any("module", "modbus"))
 	slaves := map[byte]*Slave{}
 	for _, slaveConfig := range cfg.Slaves {
 		client, err := NewClient(slaveConfig)
@@ -28,63 +39,107 @@ func NewModbus(ctx context.Context, cfg Config) (*Modbus, error) {
 		}
 		err = client.Connect()
 		if err != nil {
-			ctx.Log().Error("ignore slave device which failed to establish connection", log.Any("id", slaveConfig.ID), log.Error(err))
+			log.Warn("connect failed", v2log.Any("id", slaveConfig.ID), v2log.Error(err))
 			continue
 		}
 		slaves[slaveConfig.ID] = NewSlave(slaveConfig, client)
-		configRecoder[slaveConfig.ID] = make(map[string]MapConfig)
-	}
-	mqttCfg := ctx.SystemConfig().Broker
-	if mqttCfg.MaxCacheMessages < len(cfg.Jobs)*2 {
-		mqttCfg.MaxCacheMessages = len(cfg.Jobs) * 2
-	}
-	if mqttCfg.ClientID == "" {
-		mqttCfg.ClientID = ctx.ServiceName()
-	}
-	option, err := mqttCfg.ToClientOptions()
-	if err != nil {
-		return nil, err
-	}
-	mqtt := mqtt.NewClient(option)
-	observer := NewObserver(slaves, ctx.Log())
-	if err := mqtt.Start(observer); err != nil {
-		return nil, err
 	}
 	mod := &Modbus{
 		ctx:    ctx,
-		mqtt:   mqtt,
-		logger: ctx.Log(),
+		ws:     make(map[string]*Worker),
+		log:    log,
 		slaves: slaves,
 	}
-	var ws []*Worker
 	for _, job := range cfg.Jobs {
 		if slave := slaves[job.SlaveID]; slave != nil {
-			if job.Publish.Topic == "" {
-				job.Publish.Topic = fmt.Sprintf("%s/%d", ctx.ServiceName(), job.SlaveID)
-			}
-			sender := NewMqttSender(job.Publish, mqtt)
-			w := NewWorker(job, slave, sender, log.With(log.Any("slaveid", job.SlaveID)))
-			ws = append(ws, w)
-			if job.Encoding != JsonEncoding {
+			dev, ok := devMap[slave.cfg.Device]
+			if !ok {
+				log.Error("can not find device according to job config")
 				continue
 			}
-			if _, ok := configRecoder[job.SlaveID]; !ok {
-				continue
-			}
-			for _, m := range job.Maps {
-				if _, ok := configRecoder[job.SlaveID][m.Field.Name]; ok {
-					return nil, errors.Errorf("one device should not have same variable definition")
-				}
-				configRecoder[job.SlaveID][m.Field.Name] = m
-			}
+			mod.ws[dev.Name] = NewWorker(ctx, job, slave, &dev, log)
 		} else {
-			ctx.Log().Error("slave of job not exist")
+			log.Warn("slave id of job is invalid", v2log.Any("id", job.SlaveID))
 		}
 	}
-	for _, worker := range ws {
-		go mod.working(worker)
+	if err := ctx.RegisterDeltaCallback(mod.DeltaCallback); err != nil {
+		return nil, err
+	}
+	if err := ctx.RegisterEventCallback(mod.EventCallback); err != nil {
+		return nil, err
+	}
+	for _, dev := range devices {
+		if err := ctx.Online(&dev); err != nil {
+			return nil, err
+		}
 	}
 	return mod, nil
+}
+
+func (mod *Modbus) DeltaCallback(info *dmcontext.DeviceInfo, prop v1.Delta) error {
+	w, ok := mod.ws[info.Name]
+	if !ok {
+		mod.log.Warn("worker not exist according to device", v2log.Any("device", info.Name))
+		return ErrWorkerNotExist
+	}
+	ms := map[string]MapConfig{}
+	for _, m := range w.job.Maps {
+		ms[m.Field.Name] = m
+	}
+	for name, val := range prop {
+		slave, ok := mod.slaves[w.job.SlaveID]
+		if !ok {
+			mod.log.Warn("did not find slave to write", v2log.Any("slave id", w.job.SlaveID))
+			continue
+		}
+		cfg, ok := ms[name]
+		if !ok {
+			mod.log.Warn("did not find prop", v2log.Any("name", name))
+			continue
+		}
+		value, err := validateAndTransform(val, cfg.Field.Type)
+		if err != nil {
+			mod.log.Warn("ignore illegal data type of val", v2log.Any("value", val), v2log.Any("type", cfg.Field.Type))
+			continue
+		}
+		switch cfg.Function {
+		case DiscreteInput:
+		case InputRegister:
+			return fmt.Errorf("can not write data with illegal function code: [%d]", cfg.Function)
+		case Coil:
+			if _, err := slave.client.WriteMultipleCoils(cfg.Address, cfg.Quantity, value); err != nil {
+				return err
+			}
+		case HoldingRegister:
+			if _, err := slave.client.WriteMultipleRegisters(cfg.Address, cfg.Quantity, value); err != nil {
+				return err
+			}
+		}
+	}
+	return nil
+}
+
+func (mod *Modbus) EventCallback(info *dmcontext.DeviceInfo, event *dmcontext.Event) error {
+	w, ok := mod.ws[info.Name]
+	if !ok {
+		mod.log.Warn("worker not exist according to device", v2log.Any("device", info.Name))
+		return ErrWorkerNotExist
+	}
+	switch event.Type {
+	case dmcontext.TypeReportEvent:
+		if err := w.Execute(); err != nil {
+			return err
+		}
+	default:
+		return errors.New("event type not supported yet")
+	}
+	return nil
+}
+
+func (mod *Modbus) Start() {
+	for _, worker := range mod.ws {
+		go mod.working(worker)
+	}
 }
 
 func (mod *Modbus) working(w *Worker) {
@@ -95,10 +150,10 @@ func (mod *Modbus) working(w *Worker) {
 		case <-ticker.C:
 			err := w.Execute()
 			if err != nil {
-				mod.logger.Error("failed to execute job", log.Error(err))
+				mod.log.Error("failed to execute job", v2log.Error(err))
 			}
 		case <-mod.ctx.WaitChan():
-			mod.logger.Warn("worker stopped", log.Any("worker", w))
+			mod.log.Warn("worker stopped", v2log.Any("worker", w))
 			return
 		}
 	}
@@ -107,9 +162,79 @@ func (mod *Modbus) working(w *Worker) {
 func (mod *Modbus) Close() error {
 	for _, slave := range mod.slaves {
 		if err := slave.client.Close(); err != nil {
-			mod.logger.Warn("failed to close slave", log.Any("slave id", slave.cfg.ID))
+			mod.log.Warn("failed to close slave", v2log.Any("slave id", slave.cfg.ID))
 		}
 	}
-	mod.mqtt.Close()
 	return nil
+}
+
+func validateAndTransform(value interface{}, fieldType string) ([]byte, error) {
+	s := fmt.Sprint(value)
+	var res interface{}
+	switch fieldType {
+	case Bool:
+		var ok bool
+		res, ok = value.(bool)
+		if !ok {
+			return nil, errors.New("invalid bool value")
+		}
+	case String:
+		return []byte(s), nil
+	case Int16:
+		i, err := strconv.ParseInt(s, 10, 16)
+		if err != nil {
+			return nil, err
+		}
+		res = int16(i)
+	case UInt16:
+		ui, err := strconv.ParseUint(s, 10, 16)
+		if err != nil {
+			return nil, err
+		}
+		res = uint16(ui)
+	case Int32:
+		i, err := strconv.ParseInt(s, 10, 32)
+		if err != nil {
+			return nil, err
+		}
+		res = int32(i)
+	case UInt32:
+		ui, err := strconv.ParseUint(s, 10, 32)
+		if err != nil {
+			return nil, err
+		}
+		res = uint32(ui)
+	case Int64:
+		i, err := strconv.ParseInt(s, 10, 64)
+		if err != nil {
+			return nil, err
+		}
+		res = i
+	case UInt64:
+		ui, err := strconv.ParseUint(s, 10, 64)
+		if err != nil {
+			return nil, err
+		}
+		res = ui
+	case Float32:
+		f, err := strconv.ParseFloat(s, 32)
+		if err != nil {
+			return nil, err
+		}
+		res = float32(f)
+	case Float64:
+		f, err := strconv.ParseFloat(s, 64)
+		if err != nil {
+			return nil, err
+		}
+		res = f
+	default:
+		return nil, errors.Errorf("unsupported field type [%s]", fieldType)
+	}
+	buf := bytes.NewBuffer(nil)
+	err := binary.Write(buf, binary.BigEndian, res)
+	if err != nil {
+		return nil, errors.Trace(err)
+	}
+	return buf.Bytes(), nil
 }

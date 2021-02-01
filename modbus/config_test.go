@@ -22,7 +22,6 @@ slaves:
 jobs:
 - slaveid: 1
   interval: 3s
-  encoding: json
   maps:
   - function: 1
     address: 1
@@ -69,8 +68,6 @@ jobs:
     field:
       name: i
       type: float64
-  publish:
-    topic: test
 `
 	ioutil.WriteFile(filepath.Join(dir, fileName), []byte(confString), 0755)
 	utils.LoadYAML(filepath.Join(dir, fileName), &cfg)
@@ -89,15 +86,6 @@ jobs:
 		Jobs: []Job{{
 			SlaveID:  1,
 			Interval: 3 * time.Second,
-			Encoding: JsonEncoding,
-			Time: Time{
-				Field: Field{
-					Name: SysTime,
-					Type: IntegerTime,
-				},
-				Format:    "2006-01-02 15:04:05",
-				Precision: "s",
-			},
 			Maps: []MapConfig{
 				{
 					Address:  1,
@@ -153,10 +141,6 @@ jobs:
 					Function: 3,
 					Field:    Field{Name: "i", Type: Float64},
 				},
-			},
-			Publish: Publish{
-				QOS:   0,
-				Topic: "test",
 			},
 		}},
 	}
