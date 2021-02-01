@@ -3,7 +3,7 @@ package main
 import (
 	"github.com/baetyl/baetyl-go/v2/dmcontext"
 
-	"github.com/baetyl/baetyl-adapter/modbus"
+	"github.com/baetyl/baetyl-adapter/v2/modbus"
 )
 
 func main() {

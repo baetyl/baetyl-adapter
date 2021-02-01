@@ -1,4 +1,4 @@
-module github.com/baetyl/baetyl-adapter
+module github.com/baetyl/baetyl-adapter/v2
 
 go 1.13
 
