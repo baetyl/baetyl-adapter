@@ -3,6 +3,7 @@ package modbus
 import (
 	"bytes"
 	"encoding/binary"
+	"encoding/json"
 	"fmt"
 	"strconv"
 	"time"
@@ -14,7 +15,9 @@ import (
 )
 
 var (
-	ErrWorkerNotExist = errors.New("worker not exist")
+	ErrWorkerNotExist       = errors.New("worker not exist")
+	ErrIllegalValueType     = errors.New("illegal value type")
+	ErrUnsupportedValueType = errors.New("value type not supported")
 )
 
 type Modbus struct {
@@ -99,7 +102,7 @@ func (mod *Modbus) DeltaCallback(info *dmcontext.DeviceInfo, prop v1.Delta) erro
 		}
 		value, err := validateAndTransform(val, cfg.Field.Type)
 		if err != nil {
-			mod.log.Warn("ignore illegal data type of val", v2log.Any("value", val), v2log.Any("type", cfg.Field.Type))
+			mod.log.Warn("ignore illegal data type of val", v2log.Any("value", val), v2log.Any("type", cfg.Field.Type), v2log.Error(err))
 			continue
 		}
 		switch cfg.Function {
@@ -162,77 +165,81 @@ func (mod *Modbus) working(w *Worker) {
 func (mod *Modbus) Close() error {
 	for _, slave := range mod.slaves {
 		if err := slave.client.Close(); err != nil {
-			mod.log.Warn("failed to close slave", v2log.Any("slave id", slave.cfg.ID))
+			mod.log.Warn("failed to close slave", v2log.Any("slave id", slave.cfg.ID), v2log.Error(err))
 		}
 	}
 	return nil
 }
 
 func validateAndTransform(value interface{}, fieldType string) ([]byte, error) {
-	s := fmt.Sprint(value)
+	bs, err := json.Marshal(value)
+	if err != nil {
+		return nil, errors.Trace(err)
+	}
+	s := string(bs)
 	var res interface{}
 	switch fieldType {
 	case Bool:
 		var ok bool
 		res, ok = value.(bool)
 		if !ok {
-			return nil, errors.New("invalid bool value")
+			return nil, errors.Trace(ErrIllegalValueType)
 		}
 	case String:
-		return []byte(s), nil
+		return bs, nil
 	case Int16:
 		i, err := strconv.ParseInt(s, 10, 16)
 		if err != nil {
-			return nil, err
+			return nil, errors.Trace(err)
 		}
 		res = int16(i)
 	case UInt16:
 		ui, err := strconv.ParseUint(s, 10, 16)
 		if err != nil {
-			return nil, err
+			return nil, errors.Trace(err)
 		}
 		res = uint16(ui)
 	case Int32:
 		i, err := strconv.ParseInt(s, 10, 32)
 		if err != nil {
-			return nil, err
+			return nil, errors.Trace(err)
 		}
 		res = int32(i)
 	case UInt32:
 		ui, err := strconv.ParseUint(s, 10, 32)
 		if err != nil {
-			return nil, err
+			return nil, errors.Trace(err)
 		}
 		res = uint32(ui)
 	case Int64:
 		i, err := strconv.ParseInt(s, 10, 64)
 		if err != nil {
-			return nil, err
+			return nil, errors.Trace(err)
 		}
 		res = i
 	case UInt64:
 		ui, err := strconv.ParseUint(s, 10, 64)
 		if err != nil {
-			return nil, err
+			return nil, errors.Trace(err)
 		}
 		res = ui
 	case Float32:
 		f, err := strconv.ParseFloat(s, 32)
 		if err != nil {
-			return nil, err
+			return nil, errors.Trace(err)
 		}
 		res = float32(f)
 	case Float64:
 		f, err := strconv.ParseFloat(s, 64)
 		if err != nil {
-			return nil, err
+			return nil, errors.Trace(err)
 		}
 		res = f
 	default:
-		return nil, errors.Errorf("unsupported field type [%s]", fieldType)
+		return nil, errors.Trace(ErrUnsupportedValueType)
 	}
 	buf := bytes.NewBuffer(nil)
-	err := binary.Write(buf, binary.BigEndian, res)
+	err = binary.Write(buf, binary.BigEndian, res)
 	if err != nil {
 		return nil, errors.Trace(err)
 	}
