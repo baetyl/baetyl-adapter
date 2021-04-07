@@ -3,9 +3,7 @@ package modbus
 import (
 	"bytes"
 	"encoding/binary"
-	"encoding/json"
 	"fmt"
-	"strconv"
 	"time"
 
 	"github.com/baetyl/baetyl-go/v2/dmcontext"
@@ -16,8 +14,6 @@ import (
 
 var (
 	ErrWorkerNotExist       = errors.New("worker not exist")
-	ErrIllegalValueType     = errors.New("illegal value type")
-	ErrUnsupportedValueType = errors.New("value type not supported")
 )
 
 type Modbus struct {
@@ -100,7 +96,7 @@ func (mod *Modbus) DeltaCallback(info *dmcontext.DeviceInfo, prop v1.Delta) erro
 			mod.log.Warn("did not find prop", v2log.Any("name", name))
 			continue
 		}
-		value, err := validateAndTransform(val, cfg.Field.Type)
+		bs, err := transform(val, cfg)
 		if err != nil {
 			mod.log.Warn("ignore illegal data type of val", v2log.Any("value", val), v2log.Any("type", cfg.Field.Type), v2log.Error(err))
 			continue
@@ -110,11 +106,11 @@ func (mod *Modbus) DeltaCallback(info *dmcontext.DeviceInfo, prop v1.Delta) erro
 		case InputRegister:
 			return fmt.Errorf("can not write data with illegal function code: [%d]", cfg.Function)
 		case Coil:
-			if _, err := slave.client.WriteMultipleCoils(cfg.Address, cfg.Quantity, value); err != nil {
+			if _, err := slave.client.WriteMultipleCoils(cfg.Address, cfg.Quantity, bs); err != nil {
 				return err
 			}
 		case HoldingRegister:
-			if _, err := slave.client.WriteMultipleRegisters(cfg.Address, cfg.Quantity, value); err != nil {
+			if _, err := slave.client.WriteMultipleRegisters(cfg.Address, cfg.Quantity, bs); err != nil {
 				return err
 			}
 		}
@@ -171,77 +167,21 @@ func (mod *Modbus) Close() error {
 	return nil
 }
 
-func validateAndTransform(value interface{}, fieldType string) ([]byte, error) {
-	bs, err := json.Marshal(value)
-	if err != nil {
-		return nil, errors.Trace(err)
-	}
-	s := string(bs)
-	var res interface{}
-	switch fieldType {
-	case Bool:
-		var ok bool
-		res, ok = value.(bool)
-		if !ok {
-			return nil, errors.Trace(ErrIllegalValueType)
-		}
-	case String:
-		return bs, nil
-	case Int16:
-		i, err := strconv.ParseInt(s, 10, 16)
-		if err != nil {
-			return nil, errors.Trace(err)
-		}
-		res = int16(i)
-	case UInt16:
-		ui, err := strconv.ParseUint(s, 10, 16)
-		if err != nil {
-			return nil, errors.Trace(err)
-		}
-		res = uint16(ui)
-	case Int32:
-		i, err := strconv.ParseInt(s, 10, 32)
-		if err != nil {
-			return nil, errors.Trace(err)
-		}
-		res = int32(i)
-	case UInt32:
-		ui, err := strconv.ParseUint(s, 10, 32)
-		if err != nil {
-			return nil, errors.Trace(err)
-		}
-		res = uint32(ui)
-	case Int64:
-		i, err := strconv.ParseInt(s, 10, 64)
-		if err != nil {
-			return nil, errors.Trace(err)
-		}
-		res = i
-	case UInt64:
-		ui, err := strconv.ParseUint(s, 10, 64)
-		if err != nil {
-			return nil, errors.Trace(err)
-		}
-		res = ui
-	case Float32:
-		f, err := strconv.ParseFloat(s, 32)
-		if err != nil {
-			return nil, errors.Trace(err)
-		}
-		res = float32(f)
-	case Float64:
-		f, err := strconv.ParseFloat(s, 64)
-		if err != nil {
-			return nil, errors.Trace(err)
-		}
-		res = f
-	default:
-		return nil, errors.Trace(ErrUnsupportedValueType)
+func transform(value interface{}, cfg MapConfig) ([]byte, error) {
+	var order binary.ByteOrder = binary.BigEndian
+	if cfg.Function == HoldingRegister && cfg.SwapByte {
+		order = binary.LittleEndian
 	}
 	buf := bytes.NewBuffer(nil)
-	err = binary.Write(buf, binary.BigEndian, res)
+	err := binary.Write(buf, order, value)
 	if err != nil {
 		return nil, errors.Trace(err)
 	}
-	return buf.Bytes(), nil
+	bs := buf.Bytes()
+	if cfg.Function == HoldingRegister && cfg.SwapRegister {
+		for i := 0; i < len(bs) - 1; i += 2 {
+			bs[i], bs[i + 1] = bs[i + 1], bs[i]
+		}
+	}
+	return bs, nil
 }

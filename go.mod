@@ -4,7 +4,7 @@ go 1.13
 
 require (
 	github.com/256dpi/gomqtt v0.14.3
-	github.com/baetyl/baetyl-go/v2 v2.1.43
+	github.com/baetyl/baetyl-go/v2 v2.1.45
 	github.com/goburrow/modbus v0.1.0
 	github.com/goburrow/serial v0.1.0 // indirect
 	github.com/golang/mock v1.3.1
