@@ -76,9 +76,9 @@ type MapConfig struct {
 	// parsed attributes
 	Field Field `yaml:"field" json:"field"`
 	// SwapByte whether swap byte, meaning using big endian or little endian
-	SwapByte     bool    `yaml:"swapByte" json:"swapByte"`
+	SwapByte bool `yaml:"swapByte" json:"swapByte"`
 	// SwapRegister whether swap high and low register
-	SwapRegister bool    `yaml:"swapRegister" json:"swapRegister"`
+	SwapRegister bool `yaml:"swapRegister" json:"swapRegister"`
 }
 
 // Publish publish topic

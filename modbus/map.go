@@ -83,8 +83,8 @@ func (m *Map) Parse(data []byte) (interface{}, error) {
 		}
 	} else {
 		if m.cfg.SwapRegister {
-			for i := 0; i < len(data) - 1; i += 2 {
-				data[i], data[i + 1] = data[i + 1], data[i]
+			for i := 0; i < len(data)-1; i += 2 {
+				data[i], data[i+1] = data[i+1], data[i]
 			}
 		}
 	}

@@ -13,7 +13,7 @@ import (
 )
 
 var (
-	ErrWorkerNotExist       = errors.New("worker not exist")
+	ErrWorkerNotExist = errors.New("worker not exist")
 )
 
 type Modbus struct {
@@ -179,8 +179,8 @@ func transform(value interface{}, cfg MapConfig) ([]byte, error) {
 	}
 	bs := buf.Bytes()
 	if cfg.Function == HoldingRegister && cfg.SwapRegister {
-		for i := 0; i < len(bs) - 1; i += 2 {
-			bs[i], bs[i + 1] = bs[i + 1], bs[i]
+		for i := 0; i < len(bs)-1; i += 2 {
+			bs[i], bs[i+1] = bs[i+1], bs[i]
 		}
 	}
 	return bs, nil
