@@ -7,22 +7,22 @@ import (
 )
 
 type Worker struct {
-	ctx    dmcontext.Context
-	device *dmcontext.DeviceInfo
-	job    Job
-	maps   []*Map
-	log    *log.Logger
+	ctx   dmcontext.Context
+	job   Job
+	maps  []*Map
+	slave *Slave
+	log   *log.Logger
 }
 
-func NewWorker(ctx dmcontext.Context, job Job, slave *Slave, device *dmcontext.DeviceInfo, log *log.Logger) *Worker {
+func NewWorker(ctx dmcontext.Context, job Job, slave *Slave, log *log.Logger) *Worker {
 	w := &Worker{
-		ctx:    ctx,
-		job:    job,
-		device: device,
-		log:    log,
+		ctx:   ctx,
+		job:   job,
+		slave: slave,
+		log:   log,
 	}
 	for _, m := range job.Maps {
-		m := NewMap(m, slave, log)
+		m := NewMap(ctx, m, slave, log)
 		w.maps = append(w.maps, m)
 	}
 	return w
@@ -41,7 +41,7 @@ func (w *Worker) Execute() error {
 		}
 		r[m.cfg.Field.Name] = pa
 	}
-	if err := w.ctx.ReportDeviceProperties(w.device, r); err != nil {
+	if err := w.ctx.ReportDeviceProperties(w.slave.dev, r); err != nil {
 		return errors.Trace(err)
 	}
 	w.log.Debug("report properties successfully", log.Any("content", r))

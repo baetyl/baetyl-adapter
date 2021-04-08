@@ -6,7 +6,10 @@ import (
 	"testing"
 
 	"github.com/baetyl/baetyl-go/v2/log"
+	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/assert"
+
+	mockDm "github.com/baetyl/baetyl-adapter/v2/mock"
 )
 
 func TestMapRead(t *testing.T) {
@@ -20,7 +23,7 @@ func TestMapRead(t *testing.T) {
 	client, err := NewClient(slaveCfg)
 	assert.NoError(t, err)
 	client.Connect()
-	slave := NewSlave(slaveCfg, client)
+	slave := NewSlave(nil, slaveCfg, client)
 	log := log.With(log.Any("modbus", "map_test"))
 
 	cfg1 := MapConfig{
@@ -28,7 +31,7 @@ func TestMapRead(t *testing.T) {
 		Address:  0,
 		Quantity: 1,
 	}
-	m := NewMap(cfg1, slave, log)
+	m := NewMap(nil, cfg1, slave, log)
 	results, err := m.read()
 	assert.NoError(t, err)
 	expected1 := []byte{1}
@@ -39,7 +42,7 @@ func TestMapRead(t *testing.T) {
 		Address:  0,
 		Quantity: 2,
 	}
-	m = NewMap(cfg2, slave, log)
+	m = NewMap(nil, cfg2, slave, log)
 
 	results, err = m.read()
 	assert.NoError(t, err)
@@ -52,7 +55,7 @@ func TestMapRead(t *testing.T) {
 		Address:  0,
 		Quantity: 1,
 	}
-	m = NewMap(cfg3, slave, log)
+	m = NewMap(nil, cfg3, slave, log)
 	results, err = m.read()
 	assert.NoError(t, err)
 	expected3 := []byte{1}
@@ -64,7 +67,7 @@ func TestMapRead(t *testing.T) {
 		Address:  0,
 		Quantity: 1,
 	}
-	m = NewMap(cfg4, slave, log)
+	m = NewMap(nil, cfg4, slave, log)
 	results, err = m.read()
 	assert.NoError(t, err)
 	expected4 := []byte{255, 255}
@@ -75,7 +78,7 @@ func TestMapRead(t *testing.T) {
 		Address:  0,
 		Quantity: 0,
 	}
-	m = NewMap(cfg5, slave, log)
+	m = NewMap(nil, cfg5, slave, log)
 	results, err = m.read()
 	assert.Error(t, err)
 	server.Stop()
@@ -86,12 +89,15 @@ func TestMapRead(t *testing.T) {
 		Address:  0,
 		Quantity: 1,
 	}
-	m = NewMap(cfg6, slave, log)
+	m = NewMap(nil, cfg6, slave, log)
 	_, err = m.read()
 	assert.Error(t, err)
 }
 
 func TestMapCollect(t *testing.T) {
+	mockCtl := gomock.NewController(t)
+	mCtx := mockDm.NewMockContext(mockCtl)
+	defer mockCtl.Finish()
 	server := MbSlave{}
 	server.StartTCPSlave()
 
@@ -104,7 +110,7 @@ func TestMapCollect(t *testing.T) {
 	assert.NoError(t, err)
 	client.Connect()
 	defer client.Close()
-	slave := NewSlave(cfg, client)
+	slave := NewSlave(nil, cfg, client)
 
 	mapConfig := MapConfig{
 		Function: 2,
@@ -113,7 +119,7 @@ func TestMapCollect(t *testing.T) {
 	}
 
 	log := log.With(log.Any("modbus", "test"))
-	ma := NewMap(mapConfig, slave, log)
+	ma := NewMap(mCtx, mapConfig, slave, log)
 
 	results, err := ma.Collect()
 	assert.NoError(t, err)
@@ -131,14 +137,15 @@ func TestMapCollect(t *testing.T) {
 		Address:  0,
 		Quantity: 0,
 	}
-	ma2 := NewMap(mapConfig2, slave, log)
+	mCtx.EXPECT().Online(gomock.Any()).Return(nil)
+	ma2 := NewMap(mCtx, mapConfig2, slave, log)
 	_, err = ma2.Collect()
 	assert.Error(t, err)
 	server.Stop()
 }
 
 func TestParse(t *testing.T) {
-	m := NewMap(MapConfig{}, NewSlave(SlaveConfig{}, nil), log.With(log.Any("modbus", "test")))
+	m := NewMap(nil, MapConfig{}, NewSlave(nil, SlaveConfig{}, nil), log.With(log.Any("modbus", "test")))
 	cfgs := []MapConfig{
 		{Field: Field{Type: Bool}},
 		{Field: Field{Type: Int16}},
