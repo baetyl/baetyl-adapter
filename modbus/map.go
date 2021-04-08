@@ -6,60 +6,67 @@ import (
 	"fmt"
 	"io"
 
+	dm "github.com/baetyl/baetyl-go/v2/dmcontext"
 	"github.com/baetyl/baetyl-go/v2/errors"
 	"github.com/baetyl/baetyl-go/v2/log"
 )
 
-type read func(address, quantity uint16) (results []byte, err error)
+var (
+	ErrClientInvalid = errors.New("device client is invalid")
+)
 
 type Map struct {
-	cfg    MapConfig
-	r      read
-	s      *Slave
-	logger *log.Logger
+	ctx dm.Context
+	cfg MapConfig
+	s   *Slave
+	log *log.Logger
 }
 
-func NewMap(cfg MapConfig, s *Slave, logger *log.Logger) *Map {
-	var r read
-	switch cfg.Function {
-	case Coil:
-		r = s.client.ReadCoils
-	case DiscreteInput:
-		r = s.client.ReadDiscreteInputs
-	case HoldingRegister:
-		r = s.client.ReadHoldingRegisters
-	case InputRegister:
-		r = s.client.ReadInputRegisters
-	default:
-	}
+func NewMap(ctx dm.Context, cfg MapConfig, s *Slave, log *log.Logger) *Map {
 	return &Map{
-		cfg:    cfg,
-		r:      r,
-		s:      s,
-		logger: logger,
+		ctx: ctx,
+		cfg: cfg,
+		s:   s,
+		log: log,
 	}
 }
 
 func (m *Map) read() (results []byte, err error) {
-	results, err = m.r(m.cfg.Address, m.cfg.Quantity)
-	if err != nil {
-		// reconnect slave
-		m.s.client.Close()
-		err2 := m.s.client.Connect()
-		if err2 == nil {
-			return m.r(m.cfg.Address, m.cfg.Quantity)
-		}
-		m.logger.Error("failed to reconnect: ", log.Any("slave", m.s.cfg.ID), log.Error(err2))
-		return nil, err
+	if m.s.client.Client == nil {
+		return nil, errors.Trace(ErrClientInvalid)
 	}
-	return results, err
+	switch m.cfg.Function {
+	case Coil:
+		return m.s.client.ReadCoils(m.cfg.Address, m.cfg.Quantity)
+	case DiscreteInput:
+		return m.s.client.ReadDiscreteInputs(m.cfg.Address, m.cfg.Quantity)
+	case HoldingRegister:
+		return m.s.client.ReadHoldingRegisters(m.cfg.Address, m.cfg.Quantity)
+	case InputRegister:
+		return m.s.client.ReadInputRegisters(m.cfg.Address, m.cfg.Quantity)
+	default:
+		return
+	}
 }
 
 func (m *Map) Collect() ([]byte, error) {
 	res, err := m.read()
 	if err != nil {
-		return nil, fmt.Errorf("failed to collect data from slave.go: id=%d function=%d address=%d quantity=%d",
-			m.s.cfg.ID, m.cfg.Function, m.cfg.Address, m.cfg.Quantity)
+		m.log.Error("failed to collect data from slave", log.Any("slave id", m.s.cfg.ID), log.Any("config", m.cfg), log.Error(err))
+		if err1 := m.s.client.Reconnect(); err1 == nil {
+			m.log.Info("reconnected successfully", log.Any("slave id", m.s.cfg.ID))
+			if err2 := m.ctx.Online(m.s.dev); err2 != nil {
+				m.log.Error("failed to report online status", log.Any("slave id", m.s.cfg.ID), log.Error(err2))
+			}
+		} else {
+			m.log.Error("failed to reconnect", log.Any("slave id", m.s.cfg.ID), log.Error(err1))
+			return nil, err
+		}
+		// try to read again
+		res, err = m.read()
+		if err != nil {
+			return nil, err
+		}
 	}
 	pld := make([]byte, 4)
 	if m.cfg.SwapByte {

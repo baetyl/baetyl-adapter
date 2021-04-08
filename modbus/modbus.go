@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/baetyl/baetyl-go/v2/dmcontext"
+	dm "github.com/baetyl/baetyl-go/v2/dmcontext"
 	"github.com/baetyl/baetyl-go/v2/errors"
 	v2log "github.com/baetyl/baetyl-go/v2/log"
 	v1 "github.com/baetyl/baetyl-go/v2/spec/v1"
@@ -17,16 +17,15 @@ var (
 )
 
 type Modbus struct {
-	ctx    dmcontext.Context
+	ctx    dm.Context
 	log    *v2log.Logger
 	slaves map[byte]*Slave
 	ws     map[string]*Worker
 }
 
-func NewModbus(ctx dmcontext.Context, cfg Config) (*Modbus, error) {
-	devices := ctx.GetAllDevices()
-	devMap := map[string]dmcontext.DeviceInfo{}
-	for _, dev := range devices {
+func NewModbus(ctx dm.Context, cfg Config) (*Modbus, error) {
+	devMap := map[string]dm.DeviceInfo{}
+	for _, dev := range ctx.GetAllDevices() {
 		devMap[dev.Name] = dev
 	}
 	log := ctx.Log().With(v2log.Any("module", "modbus"))
@@ -38,10 +37,17 @@ func NewModbus(ctx dmcontext.Context, cfg Config) (*Modbus, error) {
 		}
 		err = client.Connect()
 		if err != nil {
-			log.Warn("connect failed", v2log.Any("id", slaveConfig.ID), v2log.Error(err))
+			log.Warn("connect failed", v2log.Any("slave id", slaveConfig.ID), v2log.Error(err))
+		}
+		dev, ok := devMap[slaveConfig.Device]
+		if !ok {
+			log.Error("can not find device according to job config", v2log.Any("device", slaveConfig.Device))
 			continue
 		}
-		slaves[slaveConfig.ID] = NewSlave(slaveConfig, client)
+		slaves[slaveConfig.ID] = NewSlave(&dev, slaveConfig, client)
+		if err2 := ctx.Online(&dev); err2 != nil {
+			log.Error("failed to report online status", v2log.Any("slave id", slaveConfig.ID), v2log.Error(err2))
+		}
 	}
 	mod := &Modbus{
 		ctx:    ctx,
@@ -53,10 +59,10 @@ func NewModbus(ctx dmcontext.Context, cfg Config) (*Modbus, error) {
 		if slave := slaves[job.SlaveID]; slave != nil {
 			dev, ok := devMap[slave.cfg.Device]
 			if !ok {
-				log.Error("can not find device according to job config")
+				log.Error("can not find device according to job config", v2log.Any("device", slave.cfg.Device))
 				continue
 			}
-			mod.ws[dev.Name] = NewWorker(ctx, job, slave, &dev, log)
+			mod.ws[dev.Name] = NewWorker(ctx, job, slave, log)
 		} else {
 			log.Warn("slave id of job is invalid", v2log.Any("id", job.SlaveID))
 		}
@@ -67,15 +73,10 @@ func NewModbus(ctx dmcontext.Context, cfg Config) (*Modbus, error) {
 	if err := ctx.RegisterEventCallback(mod.EventCallback); err != nil {
 		return nil, err
 	}
-	for _, dev := range devices {
-		if err := ctx.Online(&dev); err != nil {
-			return nil, err
-		}
-	}
 	return mod, nil
 }
 
-func (mod *Modbus) DeltaCallback(info *dmcontext.DeviceInfo, prop v1.Delta) error {
+func (mod *Modbus) DeltaCallback(info *dm.DeviceInfo, prop v1.Delta) error {
 	w, ok := mod.ws[info.Name]
 	if !ok {
 		mod.log.Warn("worker not exist according to device", v2log.Any("device", info.Name))
@@ -118,14 +119,14 @@ func (mod *Modbus) DeltaCallback(info *dmcontext.DeviceInfo, prop v1.Delta) erro
 	return nil
 }
 
-func (mod *Modbus) EventCallback(info *dmcontext.DeviceInfo, event *dmcontext.Event) error {
+func (mod *Modbus) EventCallback(info *dm.DeviceInfo, event *dm.Event) error {
 	w, ok := mod.ws[info.Name]
 	if !ok {
 		mod.log.Warn("worker not exist according to device", v2log.Any("device", info.Name))
 		return ErrWorkerNotExist
 	}
 	switch event.Type {
-	case dmcontext.TypeReportEvent:
+	case dm.TypeReportEvent:
 		if err := w.Execute(); err != nil {
 			return err
 		}

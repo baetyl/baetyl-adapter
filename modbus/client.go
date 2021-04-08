@@ -52,6 +52,13 @@ func NewClient(cfg SlaveConfig) (*MbClient, error) {
 	return &cli, nil
 }
 
+func (m *MbClient) Reconnect() error {
+	if err := m.Close(); err != nil {
+		return err
+	}
+	return m.Connect()
+}
+
 func (m *MbClient) Connect() error {
 	err := m.handler.Connect()
 	if err != nil {

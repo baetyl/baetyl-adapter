@@ -8,6 +8,7 @@ github.com/BurntSushi/toml v0.3.1 h1:WXkYYl6Yr3qBf1K79EBnL4mak0OimBfB0XUf9Vl28OQ
 github.com/BurntSushi/toml v0.3.1/go.mod h1:xHWCNGjB5oqiDr8zfno3MHue2Ht5sIBksp03qcyfWMU=
 github.com/abiosoft/ishell v2.0.0+incompatible/go.mod h1:HQR9AqF2R3P4XXpMpI0NAzgHf/aS6+zVXRj14cVk9qg=
 github.com/abiosoft/readline v0.0.0-20180607040430-155bce2042db/go.mod h1:rB3B4rKii8V21ydCbIzH5hZiCQE7f5E9SzUb/ZZx530=
+github.com/baetyl/baetyl-adapter v0.0.0-20210111110405-8b5fd5cd8580 h1:bKTIBsiPTd0JEk75DxjMYn2ai6iaesnmsfN/gpA5jmo=
 github.com/baetyl/baetyl-go/v2 v2.1.45 h1:1+gL47DP8KVuh2oWsGw1wkmVq99U9nSZG0ay54i9RHw=
 github.com/baetyl/baetyl-go/v2 v2.1.45/go.mod h1:n6jClckOKHICRSFiUbVn5VUwEH6OaiSyQS3z+sW2+UA=
 github.com/beorn7/perks v0.0.0-20180321164747-3a771d992973/go.mod h1:Dwedo/Wpr24TaqPxmxbtue+5NUziq4I4S80YR8gNf3Q=

@@ -11,5 +11,6 @@ require (
 	github.com/gopcua/opcua v0.1.12
 	github.com/stretchr/testify v1.5.1
 	github.com/tbrandon/mbserver v0.0.0-20170611213546-993e1772cc62
+	go.uber.org/zap v1.16.0
 	gopkg.in/validator.v2 v2.0.0-20191107172027-c3144fdedc21
 )
