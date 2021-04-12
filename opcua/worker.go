@@ -1,49 +1,32 @@
 package opcua
 
 import (
-	"encoding/json"
-	"fmt"
-	"time"
-
+	dm "github.com/baetyl/baetyl-go/v2/dmcontext"
 	"github.com/baetyl/baetyl-go/v2/errors"
 	"github.com/baetyl/baetyl-go/v2/log"
+	v1 "github.com/baetyl/baetyl-go/v2/spec/v1"
 	"github.com/gopcua/opcua/ua"
 )
 
 type Worker struct {
+	ctx    dm.Context
 	job    Job
 	device *Device
-	sender Sender
 	logger *log.Logger
 }
 
-func NewWorker(job Job, device *Device, s Sender, logger *log.Logger) *Worker {
+func NewWorker(ctx dm.Context, job Job, device *Device, logger *log.Logger) *Worker {
 	w := &Worker{
 		device: device,
 		job:    job,
-		sender: s,
+		ctx:    ctx,
 		logger: logger,
 	}
 	return w
 }
 
 func (w *Worker) Execute() error {
-	res := map[string]interface{}{}
-	now := time.Now()
-	var ts int64
-	if w.job.Time.Precision == SecondPrecision {
-		ts = now.Unix()
-	} else if w.job.Time.Precision == NanoPrecision {
-		ts = now.UnixNano()
-	}
-	if w.job.Time.Type == IntegerTime {
-		res[w.job.Time.Name] = ts
-	} else if w.job.Time.Type == StringTime {
-		res[w.job.Time.Name] = now.Format(w.job.Time.Format)
-	}
-	res[DeviceID] = w.job.DeviceID
-
-	data := make(map[string]interface{})
+	r := v1.Report{}
 	for _, p := range w.job.Properties {
 		val, err := w.read(p)
 		if err != nil {
@@ -55,19 +38,10 @@ func (w *Worker) Execute() error {
 			w.logger.Error("failed to parse", log.Error(err))
 			continue
 		}
-		data[p.Name] = value
+		r[p.Name] = value
 	}
-	// TODO if length of data equal to 0, do not send msg ?
-	res["attr"] = data
-
-	pld, err := json.Marshal(res)
-	if err != nil {
+	if err := w.ctx.ReportDeviceProperties(w.device.info, r); err != nil {
 		return err
-	}
-	if w.sender != nil {
-		if err := w.sender.Send(pld); err != nil {
-			return fmt.Errorf("failed to publish: %s", err.Error())
-		}
 	}
 	return nil
 }

@@ -37,16 +37,16 @@ func NewModbus(ctx dm.Context, cfg Config) (*Modbus, error) {
 		}
 		err = client.Connect()
 		if err != nil {
-			log.Warn("connect failed", v2log.Any("slave id", slaveConfig.ID), v2log.Error(err))
+			log.Warn("connect failed", v2log.Any("slave id", slaveConfig.Id), v2log.Error(err))
 		}
 		dev, ok := devMap[slaveConfig.Device]
 		if !ok {
 			log.Error("can not find device according to job config", v2log.Any("device", slaveConfig.Device))
 			continue
 		}
-		slaves[slaveConfig.ID] = NewSlave(&dev, slaveConfig, client)
+		slaves[slaveConfig.Id] = NewSlave(&dev, slaveConfig, client)
 		if err2 := ctx.Online(&dev); err2 != nil {
-			log.Error("failed to report online status", v2log.Any("slave id", slaveConfig.ID), v2log.Error(err2))
+			log.Error("failed to report online status", v2log.Any("slave id", slaveConfig.Id), v2log.Error(err2))
 		}
 	}
 	mod := &Modbus{
@@ -84,7 +84,7 @@ func (mod *Modbus) DeltaCallback(info *dm.DeviceInfo, prop v1.Delta) error {
 	}
 	ms := map[string]MapConfig{}
 	for _, m := range w.job.Maps {
-		ms[m.Field.Name] = m
+		ms[m.Name] = m
 	}
 	for name, val := range prop {
 		slave, ok := mod.slaves[w.job.SlaveID]
@@ -99,7 +99,7 @@ func (mod *Modbus) DeltaCallback(info *dm.DeviceInfo, prop v1.Delta) error {
 		}
 		bs, err := transform(val, cfg)
 		if err != nil {
-			mod.log.Warn("ignore illegal data type of val", v2log.Any("value", val), v2log.Any("type", cfg.Field.Type), v2log.Error(err))
+			mod.log.Warn("ignore illegal data type of val", v2log.Any("value", val), v2log.Any("type", cfg.Type), v2log.Error(err))
 			continue
 		}
 		switch cfg.Function {
@@ -162,7 +162,7 @@ func (mod *Modbus) working(w *Worker) {
 func (mod *Modbus) Close() error {
 	for _, slave := range mod.slaves {
 		if err := slave.client.Close(); err != nil {
-			mod.log.Warn("failed to close slave", v2log.Any("slave id", slave.cfg.ID), v2log.Error(err))
+			mod.log.Warn("failed to close slave", v2log.Any("slave id", slave.cfg.Id), v2log.Error(err))
 		}
 	}
 	return nil

@@ -4,6 +4,7 @@ import (
 	"github.com/baetyl/baetyl-go/v2/dmcontext"
 	"github.com/baetyl/baetyl-go/v2/errors"
 	"github.com/baetyl/baetyl-go/v2/log"
+	v1 "github.com/baetyl/baetyl-go/v2/spec/v1"
 )
 
 type Worker struct {
@@ -29,7 +30,7 @@ func NewWorker(ctx dmcontext.Context, job Job, slave *Slave, log *log.Logger) *W
 }
 
 func (w *Worker) Execute() error {
-	r := make(map[string]interface{})
+	r := v1.Report{}
 	for _, m := range w.maps {
 		p, err := m.Collect()
 		if err != nil {
@@ -39,7 +40,7 @@ func (w *Worker) Execute() error {
 		if err != nil {
 			return err
 		}
-		r[m.cfg.Field.Name] = pa
+		r[m.cfg.Name] = pa
 	}
 	if err := w.ctx.ReportDeviceProperties(w.slave.dev, r); err != nil {
 		return errors.Trace(err)
