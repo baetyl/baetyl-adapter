@@ -14,5 +14,3 @@ require (
 	go.uber.org/zap v1.16.0
 	gopkg.in/validator.v2 v2.0.0-20191107172027-c3144fdedc21
 )
-
-replace github.com/baetyl/baetyl-go/v2 => ../baetyl-go
