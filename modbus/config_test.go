@@ -1,12 +1,13 @@
 package modbus
 
 import (
-	"github.com/baetyl/baetyl-go/v2/utils"
-	"github.com/stretchr/testify/assert"
 	"io/ioutil"
 	"path/filepath"
 	"testing"
 	"time"
+
+	"github.com/baetyl/baetyl-go/v2/utils"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestConfig(t *testing.T) {
@@ -18,64 +19,55 @@ func TestConfig(t *testing.T) {
 slaves:
 - id: 1
   mode: tcp
-  address: tcp://127.0.0.1:502
+  address: 127.0.0.1:502
 jobs:
 - slaveid: 1
   interval: 3s
   maps:
   - function: 1
     address: 1
-    field:
-      name: a
-      type: bool
+    name: a
+    type: bool
   - function: 3
     address: 2
-    field:
-      name: b
-      type: int16
+    name: b
+    type: int16
   - function: 3
     address: 3
-    field:
-      name: c
-      type: uint16
+    name: c
+    type: uint16
   - function: 3
     address: 4
-    field:
-      name: d
-      type: int32
+    name: d
+    type: int32
   - function: 3
     address: 5
-    field:
-      name: e
-      type: uint32
+    name: e
+    type: uint32
   - function: 3
     address: 6
-    field:
-      name: f
-      type: int64
+    name: f
+    type: int64
   - function: 3
     address: 7
-    field:
-      name: g
-      type: uint64
+    name: g
+    type: uint64
   - function: 3
     address: 8
-    field:
-      name: h
-      type: float32
+    name: h
+    type: float32
   - function: 3
     address: 9
-    field:
-      name: i
-      type: float64
+    name: i
+    type: float64
 `
 	ioutil.WriteFile(filepath.Join(dir, fileName), []byte(confString), 0755)
 	utils.LoadYAML(filepath.Join(dir, fileName), &cfg)
 	cfg2 := Config{
 		Slaves: []SlaveConfig{{
-			ID:          1,
+			Id:          1,
 			Mode:        "tcp",
-			Address:     "tcp://127.0.0.1:502",
+			Address:     "127.0.0.1:502",
 			Timeout:     10 * time.Second,
 			IdleTimeout: 1 * time.Minute,
 			BaudRate:    19200,
@@ -91,55 +83,64 @@ jobs:
 					Address:  1,
 					Quantity: 1,
 					Function: 1,
-					Field:    Field{Name: "a", Type: Bool},
+					Name:     "a",
+					Type:     Bool,
 				},
 				{
 					Address:  2,
 					Quantity: 1,
 					Function: 3,
-					Field:    Field{Name: "b", Type: Int16},
+					Name:     "b",
+					Type:     Int16,
 				},
 				{
 					Address:  3,
 					Quantity: 1,
 					Function: 3,
-					Field:    Field{Name: "c", Type: UInt16},
+					Name:     "c",
+					Type:     UInt16,
 				},
 				{
 					Address:  4,
 					Quantity: 2,
 					Function: 3,
-					Field:    Field{Name: "d", Type: Int32},
+					Name:     "d",
+					Type:     Int32,
 				},
 				{
 					Address:  5,
 					Quantity: 2,
 					Function: 3,
-					Field:    Field{Name: "e", Type: UInt32},
+					Name:     "e",
+					Type:     UInt32,
 				},
 				{
 					Address:  6,
 					Quantity: 4,
 					Function: 3,
-					Field:    Field{Name: "f", Type: Int64},
+					Name:     "f",
+					Type:     Int64,
 				},
 				{
 					Address:  7,
 					Quantity: 4,
 					Function: 3,
-					Field:    Field{Name: "g", Type: UInt64},
+					Name:     "g",
+					Type:     UInt64,
 				},
 				{
 					Address:  8,
 					Quantity: 2,
 					Function: 3,
-					Field:    Field{Name: "h", Type: Float32},
+					Name:     "h",
+					Type:     Float32,
 				},
 				{
 					Address:  9,
 					Quantity: 4,
 					Function: 3,
-					Field:    Field{Name: "i", Type: Float64},
+					Name:     "i",
+					Type:     Float64,
 				},
 			},
 		}},
@@ -180,9 +181,8 @@ jobs:
   maps:
   - address: 1
     function: 3
-    field:
-      name: time
-      type: int16
+    name: time
+    type: int16
 `
 	ioutil.WriteFile(filepath.Join(dir, fileName), []byte(confString), 0755)
 	err = utils.LoadYAML(filepath.Join(dir, fileName), &cfg)
@@ -197,9 +197,8 @@ jobs:
   maps:
   - address: 1
     function: 1
-    field:
-      name: a
-      type: string
+    name: a
+    type: string
 `
 	ioutil.WriteFile(filepath.Join(dir, fileName), []byte(confString), 0755)
 	err = utils.LoadYAML(filepath.Join(dir, fileName), &cfg)
