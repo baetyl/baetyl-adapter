@@ -52,14 +52,14 @@ func (m *Map) read() (results []byte, err error) {
 func (m *Map) Collect() ([]byte, error) {
 	res, err := m.read()
 	if err != nil {
-		m.log.Error("failed to collect data from slave", log.Any("slave id", m.s.cfg.ID), log.Any("config", m.cfg), log.Error(err))
+		m.log.Error("failed to collect data from slave", log.Any("slave id", m.s.cfg.Id), log.Any("config", m.cfg), log.Error(err))
 		if err1 := m.s.client.Reconnect(); err1 == nil {
-			m.log.Info("reconnected successfully", log.Any("slave id", m.s.cfg.ID))
+			m.log.Info("reconnected successfully", log.Any("slave id", m.s.cfg.Id))
 			if err2 := m.ctx.Online(m.s.dev); err2 != nil {
-				m.log.Error("failed to report online status", log.Any("slave id", m.s.cfg.ID), log.Error(err2))
+				m.log.Error("failed to report online status", log.Any("slave id", m.s.cfg.Id), log.Error(err2))
 			}
 		} else {
-			m.log.Error("failed to reconnect", log.Any("slave id", m.s.cfg.ID), log.Error(err1))
+			m.log.Error("failed to reconnect", log.Any("slave id", m.s.cfg.Id), log.Error(err1))
 			return nil, err
 		}
 		// try to read again
@@ -85,7 +85,7 @@ func (m *Map) Parse(data []byte) (interface{}, error) {
 			return nil, fmt.Errorf("quantity should be 1 when parsing coil or discrete input")
 		}
 		data[0] = data[0] & 0x1
-		if m.cfg.Field.Type != Bool {
+		if m.cfg.Type != Bool {
 			return nil, fmt.Errorf("field type should be bool when parsing coil or discrete input")
 		}
 	} else {
@@ -107,7 +107,7 @@ func parse(reader io.Reader, cfg MapConfig) (res interface{}, err error) {
 	if cfg.SwapByte {
 		order = binary.LittleEndian
 	}
-	switch cfg.Field.Type {
+	switch cfg.Type {
 	case Bool:
 		var b bool
 		err = binary.Read(reader, order, &b)

@@ -44,7 +44,7 @@ type Time struct {
 type SlaveConfig struct {
 	Device string `yaml:"device" json:"device"`
 	// ID slave id
-	ID byte `yaml:"id" json:"id"`
+	Id byte `yaml:"id" json:"id"`
 	// Mode mode of connecting
 	Mode string `yaml:"mode" json:"mode" default:"rtu" validate:"regexp=^(tcp|rtu)?$"`
 	// Address Device path (/dev/ttyS0)
@@ -67,14 +67,16 @@ type SlaveConfig struct {
 
 // MapConfig map point configuration
 type MapConfig struct {
+	// Name name of map config
+	Name string `yaml:"name" json:"name"`
+	// Type type of map type
+	Type string `yaml:"type" json:"type"`
 	// Function
 	Function byte `yaml:"function" json:"function" validate:"min=1, max=4" validate:"nonzero"`
 	// Address
 	Address uint16 `yaml:"address" json:"address"`
 	// Quantity
 	Quantity uint16 `yaml:"quantity" json:"quantity"`
-	// parsed attributes
-	Field Field `yaml:"field" json:"field"`
 	// SwapByte whether swap byte, meaning using big endian or little endian
 	SwapByte bool `yaml:"swapByte" json:"swapByte"`
 	// SwapRegister whether swap high and low register
@@ -94,11 +96,11 @@ func validateJobs(v interface{}, param string) error {
 	}
 	for _, job := range jobs {
 		for _, m := range job.Maps {
-			if _, ok := SysName[m.Field.Name]; ok {
-				return fmt.Errorf("please use another name, '%s' is reserved by the system", m.Field.Name)
+			if _, ok := SysName[m.Name]; ok {
+				return fmt.Errorf("please use another name, '%s' is reserved by the system", m.Name)
 			}
-			if _, ok := SysType[m.Field.Type]; !ok {
-				return fmt.Errorf("unsupported field type: %s", m.Field.Type)
+			if _, ok := SysType[m.Type]; !ok {
+				return fmt.Errorf("unsupported field type: %s", m.Type)
 			}
 		}
 	}
@@ -108,14 +110,14 @@ func validateJobs(v interface{}, param string) error {
 func (job *Job) SetDefaults() {
 	var ms []MapConfig
 	for _, m := range job.Maps {
-		populateQuantityIfNeeds(&m)
+		PopulateQuantityIfNeeds(&m)
 		ms = append(ms, m)
 	}
 	job.Maps = ms
 }
 
-func populateQuantityIfNeeds(cfg *MapConfig) {
-	switch cfg.Field.Type {
+func PopulateQuantityIfNeeds(cfg *MapConfig) {
+	switch cfg.Type {
 	case Bool:
 		cfg.Quantity = 1
 	case Int16:

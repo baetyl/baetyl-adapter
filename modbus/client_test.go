@@ -18,9 +18,9 @@ func TestClient(t *testing.T) {
 	assert.Error(t, err)
 
 	cfg = SlaveConfig{
-		ID:      1,
+		Id:      1,
 		Mode:    string(ModeTcp),
-		Address: "tcp://127.0.0.1:50200",
+		Address: "127.0.0.1:50200",
 	}
 	client, err = NewClient(cfg)
 	assert.NoError(t, err)
@@ -32,9 +32,9 @@ func TestClient(t *testing.T) {
 	assert.NoError(t, err)
 
 	cfg = SlaveConfig{
-		ID:      2,
+		Id:      2,
 		Mode:    string(ModeTcp),
-		Address: "tcp://127.0.0.1:50201",
+		Address: "127.0.0.1:50201",
 	}
 	client, err = NewClient(cfg)
 	assert.NoError(t, err)

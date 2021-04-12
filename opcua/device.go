@@ -3,17 +3,19 @@ package opcua
 import (
 	"context"
 
+	dm "github.com/baetyl/baetyl-go/v2/dmcontext"
 	"github.com/baetyl/baetyl-go/v2/errors"
 	"github.com/gopcua/opcua"
 	"github.com/gopcua/opcua/ua"
 )
 
 type Device struct {
+	info        *dm.DeviceInfo
 	opcuaClient *opcua.Client
 	cfg         DeviceConfig
 }
 
-func NewDevice(cfg DeviceConfig) (*Device, error) {
+func NewDevice(info *dm.DeviceInfo, cfg DeviceConfig) (*Device, error) {
 	opts := []opcua.Option{
 		opcua.RequestTimeout(cfg.Timeout),
 		opcua.SecurityPolicy(cfg.Security.Policy),
@@ -51,5 +53,5 @@ func NewDevice(cfg DeviceConfig) (*Device, error) {
 	if err := client.Connect(ctx); err != nil {
 		return nil, errors.Trace(err)
 	}
-	return &Device{cfg: cfg, opcuaClient: client}, nil
+	return &Device{info: info, cfg: cfg, opcuaClient: client}, nil
 }

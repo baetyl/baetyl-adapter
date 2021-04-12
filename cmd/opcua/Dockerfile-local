@@ -1,0 +1,3 @@
+FROM busybox
+COPY opcua /bin/
+ENTRYPOINT ["opcua"]

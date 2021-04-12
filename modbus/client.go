@@ -30,8 +30,8 @@ func NewClient(cfg SlaveConfig) (*MbClient, error) {
 	switch Mode(cfg.Mode) {
 	case ModeTcp:
 		// Modbus TCP
-		h := modbus.NewTCPClientHandler(cfg.Address[6:])
-		h.SlaveId = cfg.ID
+		h := modbus.NewTCPClientHandler(cfg.Address)
+		h.SlaveId = cfg.Id
 		h.Timeout = cfg.Timeout
 		h.IdleTimeout = cfg.IdleTimeout
 		cli.handler = h
@@ -42,7 +42,7 @@ func NewClient(cfg SlaveConfig) (*MbClient, error) {
 		h.DataBits = cfg.DataBits
 		h.Parity = cfg.Parity
 		h.StopBits = cfg.StopBits
-		h.SlaveId = cfg.ID
+		h.SlaveId = cfg.Id
 		h.Timeout = cfg.Timeout
 		h.IdleTimeout = cfg.IdleTimeout
 		cli.handler = h

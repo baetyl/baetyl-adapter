@@ -11,6 +11,7 @@ type Config struct {
 
 type DeviceConfig struct {
 	ID          byte          `yaml:"id" json:"id"`
+	Device      string        `yaml:"device" json:"device"`
 	Endpoint    string        `yaml:"endpoint" json:"endpoint"`
 	Timeout     time.Duration `yaml:"timeout" json:"timeout" default:"10s"`
 	Security    Security      `yaml:"security" json:"security"`

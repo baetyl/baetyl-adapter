@@ -16,9 +16,9 @@ func TestMapRead(t *testing.T) {
 	server := MbSlave{}
 	server.StartTCPSlave()
 	slaveCfg := SlaveConfig{
-		ID:      1,
+		Id:      1,
 		Mode:    string(ModeTcp),
-		Address: "tcp://127.0.0.1:50200",
+		Address: "127.0.0.1:50200",
 	}
 	client, err := NewClient(slaveCfg)
 	assert.NoError(t, err)
@@ -102,9 +102,9 @@ func TestMapCollect(t *testing.T) {
 	server.StartTCPSlave()
 
 	cfg := SlaveConfig{
-		ID:      1,
+		Id:      1,
 		Mode:    string(ModeTcp),
-		Address: "tcp://127.0.0.1:50200",
+		Address: "127.0.0.1:50200",
 	}
 	client, err := NewClient(cfg)
 	assert.NoError(t, err)
@@ -147,18 +147,18 @@ func TestMapCollect(t *testing.T) {
 func TestParse(t *testing.T) {
 	m := NewMap(nil, MapConfig{}, NewSlave(nil, SlaveConfig{}, nil), log.With(log.Any("modbus", "test")))
 	cfgs := []MapConfig{
-		{Field: Field{Type: Bool}},
-		{Field: Field{Type: Int16}},
-		{Field: Field{Type: UInt16}},
-		{Field: Field{Type: Int32}},
-		{Field: Field{Type: UInt32}},
-		{Field: Field{Type: Int64}},
-		{Field: Field{Type: UInt64}},
-		{Field: Field{Type: Float32}},
-		{Field: Field{Type: Float64}},
-		{Field: Field{Type: "string"}},
+		{Type: Bool},
+		{Type: Int16},
+		{Type: UInt16},
+		{Type: Int32},
+		{Type: UInt32},
+		{Type: Int64},
+		{Type: UInt64},
+		{Type: Float32},
+		{Type: Float64},
+		{Type: "string"},
 		{Function: Coil},
-		{Function: Coil, Field: Field{Type: Int16}},
+		{Function: Coil, Type: Int16},
 	}
 	source := [][]byte{
 		convertToByte(true),
