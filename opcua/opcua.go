@@ -30,27 +30,27 @@ func NewOpcua(ctx dm.Context, cfg Config) (*Opcua, error) {
 		infos[info.Name] = info
 	}
 	log := ctx.Log().With(v2log.Any("module", "opcua"))
-	devs := make(map[byte]*Device)
+	devs := make(map[string]*Device)
 	for _, dCfg := range cfg.Devices {
-		if info, ok := infos[dCfg.Device]; !ok {
+		if info, ok := infos[dCfg.Device]; ok {
 			dev, err := NewDevice(&info, dCfg)
 			if err != nil {
-				log.Error("ignore device which failed to establish connection", v2log.Any("id", dCfg.ID), v2log.Error(err))
+				log.Error("ignore device which failed to establish connection", v2log.Any("device", dCfg.Device), v2log.Error(err))
 				continue
 			}
-			devs[dCfg.ID] = dev
+			devs[dCfg.Device] = dev
 			err = ctx.Online(&info)
 			if err != nil {
-				log.Error("failed to report device status", v2log.Any("id", dCfg.ID))
+				log.Error("failed to report device status", v2log.Any("device", dCfg.Device))
 			}
 		}
 	}
 	ws := make(map[string]*Worker)
 	for _, job := range cfg.Jobs {
-		if dev := devs[job.DeviceID]; dev != nil {
+		if dev := devs[job.Device]; dev != nil {
 			ws[dev.info.Name] = NewWorker(ctx, job, dev, log)
 		} else {
-			log.Error("device of job not exist", v2log.Any("device id", job.DeviceID))
+			log.Error("device of job not exist", v2log.Any("device id", job.Device))
 		}
 	}
 	o := &Opcua{
