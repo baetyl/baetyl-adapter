@@ -50,7 +50,7 @@ func genConfig(ctx dm.Context) (*opcua.Config, error) {
 			}
 		}
 		job := opcua.Job{
-			DeviceID:   dev.ID,
+			Device:     name,
 			Interval:   acc.Opcua.Interval,
 			Properties: jobProps,
 		}
@@ -58,7 +58,7 @@ func genConfig(ctx dm.Context) (*opcua.Config, error) {
 	}
 	cfg.Devices = devices
 	cfg.Jobs = jobs
-	if err := utils.SetDefaults(&cfg); err != nil {
+	if err := utils.SetDefaults(cfg); err != nil {
 		return nil, err
 	}
 	return cfg, nil
