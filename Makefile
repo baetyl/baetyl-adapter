@@ -1,7 +1,7 @@
 MODULES?=modbus opcua
 
 OUTPUT_MODS:=$(MODULES:%=cmd/%)
-IMAGE_MODS:=$(MODULES:%=cmd/%)
+IMAGE_MODS:=$(MODULES:%=image/cmd/%)
 GO_TEST_FLAGS?=-race -short -covermode=atomic -coverprofile=coverage.out
 GO_TEST_PKGS?=$(shell go list ./...)
 
@@ -15,7 +15,7 @@ $(OUTPUT_MODS):
 image: $(IMAGE_MODS)
 
 $(IMAGE_MODS):
-	@${MAKE} -C $@ image
+	@${MAKE} -C $(patsubst image/%,%,$@) image
 
 .PHONY: test
 test: fmt
@@ -25,3 +25,7 @@ test: fmt
 .PHONY: fmt
 fmt:
 	go fmt ./...
+
+.PHONY: clean
+clean:
+	@rm -rf output
