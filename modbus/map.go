@@ -72,9 +72,10 @@ func (m *Map) Collect() ([]byte, error) {
 	if m.cfg.SwapByte {
 		binary.LittleEndian.PutUint16(pld, m.cfg.Address)
 		binary.LittleEndian.PutUint16(pld[2:], m.cfg.Quantity)
+	} else {
+		binary.BigEndian.PutUint16(pld, m.cfg.Address)
+		binary.BigEndian.PutUint16(pld[2:], m.cfg.Quantity)
 	}
-	binary.BigEndian.PutUint16(pld, m.cfg.Address)
-	binary.BigEndian.PutUint16(pld[2:], m.cfg.Quantity)
 	pld = append(pld, res...)
 	return pld, nil
 }
