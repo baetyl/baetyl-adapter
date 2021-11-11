@@ -2,6 +2,9 @@ package opcua
 
 import (
 	"context"
+	"crypto/rsa"
+	"crypto/x509"
+	"encoding/pem"
 
 	dm "github.com/baetyl/baetyl-go/v2/dmcontext"
 	"github.com/baetyl/baetyl-go/v2/errors"
@@ -21,7 +24,7 @@ func NewDevice(info *dm.DeviceInfo, cfg DeviceConfig) (*Device, error) {
 		opcua.SecurityPolicy(cfg.Security.Policy),
 		opcua.SecurityModeString(cfg.Security.Mode),
 	}
-	if cfg.Auth.Username != "" && cfg.Auth.Password != "" {
+	if cfg.Auth != nil {
 		opts = append(opts,
 			opcua.AuthUsername(cfg.Auth.Username, cfg.Auth.Password),
 		)
@@ -44,7 +47,18 @@ func NewDevice(info *dm.DeviceInfo, cfg DeviceConfig) (*Device, error) {
 			opcua.SecurityFromEndpoint(ep, ua.UserTokenTypeAnonymous),
 		)
 	}
-	// TODO add certificate options
+	if cfg.Certificate != nil {
+		cert, err := decodeCert([]byte(cfg.Certificate.Cert))
+		if err != nil {
+			return nil, err
+		}
+		key, err := decodeKey([]byte(cfg.Certificate.Key))
+		if err != nil {
+			return nil, err
+		}
+		opts = append(opts, opcua.Certificate(cert))
+		opts = append(opts, opcua.PrivateKey(key))
+	}
 
 	// optimize timeout
 	var ctx, cancel = context.WithTimeout(context.Background(), cfg.Timeout)
@@ -55,3 +69,24 @@ func NewDevice(info *dm.DeviceInfo, cfg DeviceConfig) (*Device, error) {
 	}
 	return &Device{info: info, cfg: cfg, opcuaClient: client}, nil
 }
+
+func decodeCert(certPEM []byte) ([]byte, error) {
+	block, _ := pem.Decode(certPEM)
+	if block == nil || block.Type != "CERTIFICATE" {
+		return nil, errors.Errorf("failed to decode cert")
+	}
+	return block.Bytes, nil
+}
+
+func decodeKey(keyPEM []byte) (*rsa.PrivateKey, error) {
+	block, _ := pem.Decode(keyPEM)
+	if block == nil || block.Type != "RSA PRIVATE KEY" {
+		return nil, errors.Errorf("failed to decode key")
+	}
+	var pk, err = x509.ParsePKCS1PrivateKey(block.Bytes)
+	if err != nil {
+		return nil, errors.Errorf("failed to parse key")
+	}
+	return pk, nil
+}
+

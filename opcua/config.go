@@ -14,8 +14,8 @@ type DeviceConfig struct {
 	Endpoint    string        `yaml:"endpoint" json:"endpoint"`
 	Timeout     time.Duration `yaml:"timeout" json:"timeout" default:"10s"`
 	Security    Security      `yaml:"security" json:"security"`
-	Auth        Auth          `yaml:"auth" json:"auth"`
-	Certificate Certificate   `yaml:"certificate" json:"certificate"`
+	Auth        *Auth         `yaml:"auth" json:"auth"`
+	Certificate *Certificate  `yaml:"certificate" json:"certificate"`
 }
 
 type Security struct {
@@ -29,8 +29,8 @@ type Auth struct {
 }
 
 type Certificate struct {
-	Cert string `yaml:"certFile" json:"certFile"`
-	Key  string `yaml:"keyFile" json:"keyFile"`
+	Cert string `yaml:"cert" json:"cert"`
+	Key  string `yaml:"key" json:"key"`
 }
 
 type Job struct {
