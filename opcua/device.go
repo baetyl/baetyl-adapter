@@ -24,30 +24,26 @@ func NewDevice(info *dm.DeviceInfo, cfg DeviceConfig) (*Device, error) {
 		opcua.SecurityPolicy(cfg.Security.Policy),
 		opcua.SecurityModeString(cfg.Security.Mode),
 	}
+
+	cli := opcua.NewClient(cfg.Endpoint)
+	var ctx, cancel = context.WithTimeout(context.Background(), cfg.Timeout)
+	defer cancel()
+	if err := cli.Dial(ctx); err != nil {
+		return nil, err
+	}
+	defer cli.Close()
+	var res, err = cli.GetEndpoints()
+	if err != nil {
+		return nil, err
+	}
+	var ep = opcua.SelectEndpoint(res.Endpoints, cfg.Security.Policy, ua.MessageSecurityModeFromString(cfg.Security.Mode))
+
 	if cfg.Auth != nil {
 		opts = append(opts,
 			opcua.AuthUsername(cfg.Auth.Username, cfg.Auth.Password),
+			opcua.SecurityFromEndpoint(ep, ua.UserTokenTypeUserName),
 		)
-	} else {
-		cli := opcua.NewClient(cfg.Endpoint)
-		var ctx, cancel = context.WithTimeout(context.Background(), cfg.Timeout)
-		defer cancel()
-		if err := cli.Dial(ctx); err != nil {
-			return nil, err
-		}
-		defer cli.Close()
-		var res, err = cli.GetEndpoints()
-		if err != nil {
-			return nil, err
-		}
-		endpoints := res.Endpoints
-		var ep = opcua.SelectEndpoint(endpoints, cfg.Security.Policy, ua.MessageSecurityModeFromString(cfg.Security.Mode))
-		opts = append(opts,
-			opcua.AuthAnonymous(),
-			opcua.SecurityFromEndpoint(ep, ua.UserTokenTypeAnonymous),
-		)
-	}
-	if cfg.Certificate != nil {
+	} else if cfg.Certificate != nil{
 		cert, err := decodeCert([]byte(cfg.Certificate.Cert))
 		if err != nil {
 			return nil, err
@@ -56,15 +52,21 @@ func NewDevice(info *dm.DeviceInfo, cfg DeviceConfig) (*Device, error) {
 		if err != nil {
 			return nil, err
 		}
-		opts = append(opts, opcua.Certificate(cert))
-		opts = append(opts, opcua.PrivateKey(key))
+		opts = append(opts, opcua.AuthCertificate(cert),
+			opcua.PrivateKey(key),
+			opcua.SecurityFromEndpoint(ep, ua.UserTokenTypeCertificate))
+	} else {
+		opts = append(opts,
+			opcua.AuthAnonymous(),
+			opcua.SecurityFromEndpoint(ep, ua.UserTokenTypeAnonymous),
+		)
 	}
 
 	// optimize timeout
-	var ctx, cancel = context.WithTimeout(context.Background(), cfg.Timeout)
+	ctx, cancel = context.WithTimeout(context.Background(), cfg.Timeout)
 	defer cancel()
 	var client = opcua.NewClient(cfg.Endpoint, opts...)
-	if err := client.Connect(ctx); err != nil {
+	if err = client.Connect(ctx); err != nil {
 		return nil, errors.Trace(err)
 	}
 	return &Device{info: info, cfg: cfg, opcuaClient: client}, nil
