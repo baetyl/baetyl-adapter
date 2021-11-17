@@ -38,7 +38,7 @@ func NewDevice(info *dm.DeviceInfo, cfg DeviceConfig) (*Device, error) {
 	}
 	var ep = opcua.SelectEndpoint(res.Endpoints, cfg.Security.Policy, ua.MessageSecurityModeFromString(cfg.Security.Mode))
 
-	if cfg.Auth != nil {
+	if cfg.Auth != nil && cfg.Auth.Username != "" && cfg.Auth.Password != "" {
 		opts = append(opts,
 			opcua.AuthUsername(cfg.Auth.Username, cfg.Auth.Password),
 			opcua.SecurityFromEndpoint(ep, ua.UserTokenTypeUserName),
