@@ -43,7 +43,7 @@ func NewDevice(info *dm.DeviceInfo, cfg DeviceConfig) (*Device, error) {
 			opcua.AuthUsername(cfg.Auth.Username, cfg.Auth.Password),
 			opcua.SecurityFromEndpoint(ep, ua.UserTokenTypeUserName),
 		)
-	} else if cfg.Certificate != nil{
+	} else if cfg.Certificate != nil && cfg.Certificate.Cert != "" && cfg.Certificate.Key != ""{
 		cert, err := decodeCert([]byte(cfg.Certificate.Cert))
 		if err != nil {
 			return nil, err
