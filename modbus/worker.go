@@ -34,6 +34,9 @@ func (w *Worker) Execute() error {
 	for _, m := range w.maps {
 		p, err := m.Collect()
 		if err != nil {
+			if err1 := w.slave.UpdateStatus(SlaveOffline); err1 != nil {
+				w.log.Error("failed to update slave status", log.Any("error", err1), log.Any("status", "offline"))
+			}
 			return err
 		}
 		pa, err := m.Parse(p[4:])
@@ -41,6 +44,9 @@ func (w *Worker) Execute() error {
 			return err
 		}
 		r[m.cfg.Name] = pa
+	}
+	if err := w.slave.UpdateStatus(SlaveOnline); err != nil {
+		w.log.Error("failed to update slave status", log.Any("error", err), log.Any("status", "online"))
 	}
 	if err := w.ctx.ReportDeviceProperties(w.slave.dev, r); err != nil {
 		return errors.Trace(err)
