@@ -55,9 +55,6 @@ func (m *Map) Collect() ([]byte, error) {
 		m.log.Error("failed to collect data from slave", log.Any("slave id", m.s.cfg.Id), log.Any("config", m.cfg), log.Error(err))
 		if err1 := m.s.client.Reconnect(); err1 == nil {
 			m.log.Info("reconnected successfully", log.Any("slave id", m.s.cfg.Id))
-			if err2 := m.ctx.Online(m.s.dev); err2 != nil {
-				m.log.Error("failed to report online status", log.Any("slave id", m.s.cfg.Id), log.Error(err2))
-			}
 		} else {
 			m.log.Error("failed to reconnect", log.Any("slave id", m.s.cfg.Id), log.Error(err1))
 			return nil, err

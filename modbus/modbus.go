@@ -44,9 +44,10 @@ func NewModbus(ctx dm.Context, cfg Config) (*Modbus, error) {
 			log.Error("can not find device according to job config", v2log.Any("device", slaveConfig.Device))
 			continue
 		}
-		slaves[slaveConfig.Id] = NewSlave(&dev, slaveConfig, client)
-		if err2 := ctx.Online(&dev); err2 != nil {
-			log.Error("failed to report online status", v2log.Any("slave id", slaveConfig.Id), v2log.Error(err2))
+		slave := NewSlave(ctx, &dev, slaveConfig, client)
+		slaves[slaveConfig.Id] = slave
+		if err = slave.UpdateStatus(SlaveOnline); err != nil {
+			log.Error("failed to update status", v2log.Any("error", err))
 		}
 	}
 	mod := &Modbus{
