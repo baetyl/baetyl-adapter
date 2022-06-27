@@ -26,43 +26,55 @@ jobs:
   maps:
   - function: 1
     address: 1
+    id: 1
     name: a
     type: bool
   - function: 3
     address: 2
+    id: 2
     name: b
     type: int16
   - function: 3
     address: 3
+    id: 3
     name: c
     type: uint16
   - function: 3
     address: 4
+    id: 4
     name: d
     type: int32
   - function: 3
     address: 5
+    id: 5
     name: e
     type: uint32
   - function: 3
     address: 6
+    id: 6
     name: f
     type: int64
   - function: 3
     address: 7
+    id: 7
     name: g
     type: uint64
   - function: 3
     address: 8
+    id: 8
     name: h
     type: float32
   - function: 3
     address: 9
+    id: 9
     name: i
     type: float64
 `
-	ioutil.WriteFile(filepath.Join(dir, fileName), []byte(confString), 0755)
-	utils.LoadYAML(filepath.Join(dir, fileName), &cfg)
+	err = ioutil.WriteFile(filepath.Join(dir, fileName), []byte(confString), 0755)
+	err = utils.LoadYAML(filepath.Join(dir, fileName), &cfg)
+	if err != nil{
+		return
+	}
 	cfg2 := Config{
 		Slaves: []SlaveConfig{{
 			Id:          1,
@@ -80,6 +92,7 @@ jobs:
 			Interval: 3 * time.Second,
 			Maps: []MapConfig{
 				{
+					Id:      "1",
 					Address:  1,
 					Quantity: 1,
 					Function: 1,
@@ -87,6 +100,7 @@ jobs:
 					Type:     Bool,
 				},
 				{
+					Id:      "2",
 					Address:  2,
 					Quantity: 1,
 					Function: 3,
@@ -94,6 +108,7 @@ jobs:
 					Type:     Int16,
 				},
 				{
+					Id:      "3",
 					Address:  3,
 					Quantity: 1,
 					Function: 3,
@@ -101,6 +116,7 @@ jobs:
 					Type:     UInt16,
 				},
 				{
+					Id:      "4",
 					Address:  4,
 					Quantity: 2,
 					Function: 3,
@@ -108,6 +124,7 @@ jobs:
 					Type:     Int32,
 				},
 				{
+					Id:      "5",
 					Address:  5,
 					Quantity: 2,
 					Function: 3,
@@ -115,6 +132,7 @@ jobs:
 					Type:     UInt32,
 				},
 				{
+					Id:      "6",
 					Address:  6,
 					Quantity: 4,
 					Function: 3,
@@ -122,6 +140,7 @@ jobs:
 					Type:     Int64,
 				},
 				{
+					Id:      "7",
 					Address:  7,
 					Quantity: 4,
 					Function: 3,
@@ -129,6 +148,7 @@ jobs:
 					Type:     UInt64,
 				},
 				{
+					Id:      "8",
 					Address:  8,
 					Quantity: 2,
 					Function: 3,
@@ -136,6 +156,7 @@ jobs:
 					Type:     Float32,
 				},
 				{
+					Id:      "9",
 					Address:  9,
 					Quantity: 4,
 					Function: 3,
@@ -151,10 +172,10 @@ jobs:
 	confString = `
 jobs:
 - slaveid: 1
-  encoding: json
-  maps:
-  - address: 1
-    function: 1
+ encoding: json
+ maps:
+ - address: 1
+   function: 1
 `
 	ioutil.WriteFile(filepath.Join(dir, fileName), []byte(confString), 0755)
 	err = utils.LoadYAML(filepath.Join(dir, fileName), &cfg)
@@ -164,10 +185,10 @@ jobs:
 	confString = `
 jobs:
 - slaveid: 1
-  encoding: binary
-  maps:
-  - address: 2
-    function: 3
+ encoding: binary
+ maps:
+ - address: 2
+   function: 3
 `
 	ioutil.WriteFile(filepath.Join(dir, fileName), []byte(confString), 0755)
 	err = utils.LoadYAML(filepath.Join(dir, fileName), &cfg)
@@ -177,12 +198,12 @@ jobs:
 	confString = `
 jobs:
 - slaveid: 1
-  encoding: json
-  maps:
-  - address: 1
-    function: 3
-    name: time
-    type: int16
+ encoding: json
+ maps:
+ - address: 1
+   function: 3
+   name: time
+   type: int16
 `
 	ioutil.WriteFile(filepath.Join(dir, fileName), []byte(confString), 0755)
 	err = utils.LoadYAML(filepath.Join(dir, fileName), &cfg)
@@ -192,13 +213,13 @@ jobs:
 	confString = `
 jobs:
 - slaveid: 1
-  interval: 3s
-  encoding: json
-  maps:
-  - address: 1
-    function: 1
-    name: a
-    type: string
+ interval: 3s
+ encoding: json
+ maps:
+ - address: 1
+   function: 1
+   name: a
+   type: string
 `
 	ioutil.WriteFile(filepath.Join(dir, fileName), []byte(confString), 0755)
 	err = utils.LoadYAML(filepath.Join(dir, fileName), &cfg)

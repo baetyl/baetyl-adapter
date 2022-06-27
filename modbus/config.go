@@ -43,7 +43,7 @@ type Time struct {
 // SlaveConfig modbus slave device configuration
 type SlaveConfig struct {
 	Device string `yaml:"device" json:"device"`
-	// ID slave id
+	// Id slave id
 	Id byte `yaml:"id" json:"id"`
 	// Mode mode of connecting
 	Mode string `yaml:"mode" json:"mode" default:"rtu" validate:"regexp=^(tcp|rtu)?$"`
@@ -67,6 +67,7 @@ type SlaveConfig struct {
 
 // MapConfig map point configuration
 type MapConfig struct {
+	Id string `yaml:"id" json:"id"`
 	// Name name of map config
 	Name string `yaml:"name" json:"name"`
 	// Type type of map type
