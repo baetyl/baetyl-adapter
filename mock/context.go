@@ -122,6 +122,20 @@ func (mr *MockContextMockRecorder) Delete(key interface{}) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Delete", reflect.TypeOf((*MockContext)(nil).Delete), key)
 }
 
+// GetAccessConfig mocks base method.
+func (m *MockContext) GetAccessConfig() map[string]dmcontext.AccessConfig {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetAccessConfig")
+	ret0, _ := ret[0].(map[string]dmcontext.AccessConfig)
+	return ret0
+}
+
+// GetAccessConfig indicates an expected call of GetAccessConfig.
+func (mr *MockContextMockRecorder) GetAccessConfig() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAccessConfig", reflect.TypeOf((*MockContext)(nil).GetAccessConfig))
+}
+
 // GetAccessTemplates mocks base method.
 func (m *MockContext) GetAccessTemplates(device *dmcontext.DeviceInfo) (*dmcontext.AccessTemplate, error) {
 	m.ctrl.T.Helper()
@@ -194,6 +208,21 @@ func (mr *MockContextMockRecorder) GetDevice(device interface{}) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetDevice", reflect.TypeOf((*MockContext)(nil).GetDevice), device)
 }
 
+// GetDeviceAccessConfig mocks base method.
+func (m *MockContext) GetDeviceAccessConfig(device *dmcontext.DeviceInfo) (*dmcontext.AccessConfig, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetDeviceAccessConfig", device)
+	ret0, _ := ret[0].(*dmcontext.AccessConfig)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetDeviceAccessConfig indicates an expected call of GetDeviceAccessConfig.
+func (mr *MockContextMockRecorder) GetDeviceAccessConfig(device interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetDeviceAccessConfig", reflect.TypeOf((*MockContext)(nil).GetDeviceAccessConfig), device)
+}
+
 // GetDeviceModel mocks base method.
 func (m *MockContext) GetDeviceModel(device *dmcontext.DeviceInfo) ([]dmcontext.DeviceProperty, error) {
 	m.ctrl.T.Helper()
@@ -224,6 +253,21 @@ func (mr *MockContextMockRecorder) GetDeviceProperties(device interface{}) *gomo
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetDeviceProperties", reflect.TypeOf((*MockContext)(nil).GetDeviceProperties), device)
 }
 
+// GetDevicePropertiesConfig mocks base method.
+func (m *MockContext) GetDevicePropertiesConfig(device *dmcontext.DeviceInfo) ([]dmcontext.DeviceProperty, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetDevicePropertiesConfig", device)
+	ret0, _ := ret[0].([]dmcontext.DeviceProperty)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetDevicePropertiesConfig indicates an expected call of GetDevicePropertiesConfig.
+func (mr *MockContextMockRecorder) GetDevicePropertiesConfig(device interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetDevicePropertiesConfig", reflect.TypeOf((*MockContext)(nil).GetDevicePropertiesConfig), device)
+}
+
 // GetDriverConfig mocks base method.
 func (m *MockContext) GetDriverConfig() string {
 	m.ctrl.T.Helper()
@@ -236,6 +280,20 @@ func (m *MockContext) GetDriverConfig() string {
 func (mr *MockContextMockRecorder) GetDriverConfig() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetDriverConfig", reflect.TypeOf((*MockContext)(nil).GetDriverConfig))
+}
+
+// GetPropertiesConfig mocks base method.
+func (m *MockContext) GetPropertiesConfig() map[string][]dmcontext.DeviceProperty {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetPropertiesConfig")
+	ret0, _ := ret[0].(map[string][]dmcontext.DeviceProperty)
+	return ret0
+}
+
+// GetPropertiesConfig indicates an expected call of GetPropertiesConfig.
+func (mr *MockContextMockRecorder) GetPropertiesConfig() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetPropertiesConfig", reflect.TypeOf((*MockContext)(nil).GetPropertiesConfig))
 }
 
 // Load mocks base method.
