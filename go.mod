@@ -3,10 +3,11 @@ module github.com/baetyl/baetyl-adapter/v2
 go 1.13
 
 require (
-	github.com/baetyl/baetyl-go/v2 v2.2.4-0.20211111085744-68c91647b1cf
+	github.com/baetyl/baetyl-go/v2 v2.2.4-0.20220623063710-b8a9f64cd064
 	github.com/goburrow/modbus v0.1.0
 	github.com/goburrow/serial v0.1.0 // indirect
 	github.com/golang/mock v1.3.1
+	github.com/google/uuid v1.0.0
 	github.com/gopcua/opcua v0.1.12
 	github.com/jinzhu/copier v0.1.0
 	github.com/stretchr/testify v1.5.1

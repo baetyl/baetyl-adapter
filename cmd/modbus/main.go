@@ -30,23 +30,24 @@ func main() {
 
 func genConfig(ctx dm.Context) (*modbus.Config, error) {
 	cfg := &modbus.Config{}
-	devProps := ctx.GetPropertiesConfig()
 	var slaves []modbus.SlaveConfig
 	var jobs []modbus.Job
-	for name, acc := range ctx.GetAccessConfig() {
-		if acc.Modbus == nil {
+
+	for _, deviceInfo := range ctx.GetAllDevices() {
+		accessConfig := deviceInfo.AccessConfig
+		if accessConfig.Modbus == nil {
 			continue
 		}
 		slave := modbus.SlaveConfig{
-			Device:      name,
-			Id:          acc.Modbus.Id,
-			Timeout:     acc.Modbus.Timeout,
-			IdleTimeout: acc.Modbus.IdleTimeout,
+			Device:      deviceInfo.Name,
+			Id:          accessConfig.Modbus.Id,
+			Timeout:     accessConfig.Modbus.Timeout,
+			IdleTimeout: accessConfig.Modbus.IdleTimeout,
 		}
-		if tcp := acc.Modbus.Tcp; tcp != nil {
+		if tcp := accessConfig.Modbus.Tcp; tcp != nil {
 			slave.Mode = string(modbus.ModeTcp)
 			slave.Address = fmt.Sprintf("%s:%d", tcp.Address, tcp.Port)
-		} else if rtu := acc.Modbus.Rtu; rtu != nil {
+		} else if rtu := accessConfig.Modbus.Rtu; rtu != nil {
 			slave.Mode = string(modbus.ModeRtu)
 			slave.Address = rtu.Port
 			slave.BaudRate = rtu.BaudRate
@@ -55,25 +56,30 @@ func genConfig(ctx dm.Context) (*modbus.Config, error) {
 			slave.Parity = rtu.Parity
 		}
 		slaves = append(slaves, slave)
+
 		var jobMaps []modbus.MapConfig
-		for _, prop := range devProps[name] {
-			if visitor := prop.Visitor.Modbus; visitor != nil {
-				address, _ := strconv.ParseUint(visitor.Address[2:], 10, 16)
-				m := modbus.MapConfig{
-					Name:         prop.Name,
-					Type:         visitor.Type,
-					Function:     visitor.Function,
-					Address:      uint16(address),
-					Quantity:     visitor.Quantity,
-					SwapRegister: visitor.SwapRegister,
-					SwapByte:     visitor.SwapByte,
+		deviceTemplate, _ := ctx.GetAccessTemplates(&deviceInfo)
+		if deviceTemplate != nil && deviceTemplate.Properties != nil && len(deviceTemplate.Properties) > 0 {
+			for _, prop := range deviceTemplate.Properties {
+				if visitor := prop.Visitor.Modbus; visitor != nil {
+					address, _ := strconv.ParseUint(visitor.Address[2:], 10, 16)
+					m := modbus.MapConfig{
+						Id:           prop.Id,
+						Name:         prop.Name,
+						Type:         visitor.Type,
+						Function:     visitor.Function,
+						Address:      uint16(address),
+						Quantity:     visitor.Quantity,
+						SwapRegister: visitor.SwapRegister,
+						SwapByte:     visitor.SwapByte,
+					}
+					jobMaps = append(jobMaps, m)
 				}
-				jobMaps = append(jobMaps, m)
 			}
 		}
 		job := modbus.Job{
-			SlaveID:  acc.Modbus.Id,
-			Interval: acc.Modbus.Interval,
+			SlaveID:  accessConfig.Modbus.Id,
+			Interval: accessConfig.Modbus.Interval,
 			Maps:     jobMaps,
 		}
 		jobs = append(jobs, job)

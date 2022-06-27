@@ -11,7 +11,7 @@ func TestExecute(t *testing.T) {
 	//ms := mock.NewMockSender(mockCtl)
 	//
 	//slaveCfg := SlaveConfig{
-	//	ID:      1,
+	//	Id:      1,
 	//	Mode:    string(ModeTcp),
 	//	Address: "tcp://127.0.0.1:50200",
 	//}
