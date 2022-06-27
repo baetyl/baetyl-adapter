@@ -11,10 +11,10 @@ import (
 
 const (
 	BIE       = "bie"
-	DMPKEY    = "dmp"
-	METHOD    = "thing.event.post"
-	VERSION   = "1.0"
-	BIND_NAME = "MAIN"
+	DMPKey    = "dmp"
+	Method   = "thing.event.post"
+	Version  = "1.0"
+	BindName = "MAIN"
 )
 
 type DMP struct {
@@ -95,12 +95,12 @@ func (w *Worker) Execute() error {
 		bie[model.Attribute] = modelValue
 	}
 	events[BIE] = bie
-	r[DMPKEY] = DMP{
+	r[DMPKey] = DMP{
 		ReqId:     reqId,
-		Method:    METHOD,
-		Version:   VERSION,
+		Method:    Method,
+		Version:   Version,
 		Timestamp: timestamp,
-		BindName:  BIND_NAME,
+		BindName:  BindName,
 		Events:    events,
 	}
 
