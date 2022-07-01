@@ -72,7 +72,7 @@ jobs:
 `
 	err = ioutil.WriteFile(filepath.Join(dir, fileName), []byte(confString), 0755)
 	err = utils.LoadYAML(filepath.Join(dir, fileName), &cfg)
-	if err != nil{
+	if err != nil {
 		return
 	}
 	cfg2 := Config{
@@ -92,7 +92,7 @@ jobs:
 			Interval: 3 * time.Second,
 			Maps: []MapConfig{
 				{
-					Id:      "1",
+					Id:       "1",
 					Address:  1,
 					Quantity: 1,
 					Function: 1,
@@ -100,7 +100,7 @@ jobs:
 					Type:     Bool,
 				},
 				{
-					Id:      "2",
+					Id:       "2",
 					Address:  2,
 					Quantity: 1,
 					Function: 3,
@@ -108,7 +108,7 @@ jobs:
 					Type:     Int16,
 				},
 				{
-					Id:      "3",
+					Id:       "3",
 					Address:  3,
 					Quantity: 1,
 					Function: 3,
@@ -116,7 +116,7 @@ jobs:
 					Type:     UInt16,
 				},
 				{
-					Id:      "4",
+					Id:       "4",
 					Address:  4,
 					Quantity: 2,
 					Function: 3,
@@ -124,7 +124,7 @@ jobs:
 					Type:     Int32,
 				},
 				{
-					Id:      "5",
+					Id:       "5",
 					Address:  5,
 					Quantity: 2,
 					Function: 3,
@@ -132,7 +132,7 @@ jobs:
 					Type:     UInt32,
 				},
 				{
-					Id:      "6",
+					Id:       "6",
 					Address:  6,
 					Quantity: 4,
 					Function: 3,
@@ -140,7 +140,7 @@ jobs:
 					Type:     Int64,
 				},
 				{
-					Id:      "7",
+					Id:       "7",
 					Address:  7,
 					Quantity: 4,
 					Function: 3,
@@ -148,7 +148,7 @@ jobs:
 					Type:     UInt64,
 				},
 				{
-					Id:      "8",
+					Id:       "8",
 					Address:  8,
 					Quantity: 2,
 					Function: 3,
@@ -156,7 +156,7 @@ jobs:
 					Type:     Float32,
 				},
 				{
-					Id:      "9",
+					Id:       "9",
 					Address:  9,
 					Quantity: 4,
 					Function: 3,
