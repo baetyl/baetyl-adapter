@@ -1,13 +1,14 @@
 package modbus
 
 import (
+	"time"
+
 	"github.com/baetyl/baetyl-adapter/v2/dmp"
 	"github.com/baetyl/baetyl-go/v2/dmcontext"
 	"github.com/baetyl/baetyl-go/v2/errors"
 	"github.com/baetyl/baetyl-go/v2/log"
 	v1 "github.com/baetyl/baetyl-go/v2/spec/v1"
 	"github.com/google/uuid"
-	"time"
 )
 
 type Worker struct {
@@ -78,7 +79,7 @@ func (w *Worker) Execute() error {
 		}
 		bie[model.Attribute] = modelValue
 	}
-	events[dmp.BIE] = bie
+	events[dmp.BIEKey] = bie
 	r[dmp.DMPKey] = dmp.DMP{
 		ReqId:     reqId,
 		Method:    dmp.Method,

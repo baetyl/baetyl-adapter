@@ -12,5 +12,6 @@ require (
 	github.com/jinzhu/copier v0.1.0
 	github.com/stretchr/testify v1.5.1
 	github.com/tbrandon/mbserver v0.0.0-20170611213546-993e1772cc62
+	golang.org/x/tools v0.1.11 // indirect
 	gopkg.in/validator.v2 v2.0.0-20191107172027-c3144fdedc21
 )

@@ -1,6 +1,8 @@
 package opcua
 
 import (
+	"time"
+
 	"github.com/baetyl/baetyl-adapter/v2/dmp"
 	dm "github.com/baetyl/baetyl-go/v2/dmcontext"
 	"github.com/baetyl/baetyl-go/v2/errors"
@@ -8,7 +10,6 @@ import (
 	v1 "github.com/baetyl/baetyl-go/v2/spec/v1"
 	"github.com/google/uuid"
 	"github.com/gopcua/opcua/ua"
-	"time"
 )
 
 type Worker struct {
@@ -45,8 +46,6 @@ func (w *Worker) Execute() error {
 	}
 
 	// add dmp filed
-	reqId := uuid.New().String()
-	timestamp := time.Now().UnixNano() / 1e6
 	events := make(map[string]interface{})
 	bie := make(map[string]interface{})
 	accessTemplate, err := w.ctx.GetAccessTemplates(w.device.info)
@@ -73,12 +72,12 @@ func (w *Worker) Execute() error {
 		}
 		bie[model.Attribute] = modelValue
 	}
-	events[dmp.BIE] = bie
+	events[dmp.BIEKey] = bie
 	r[dmp.DMPKey] = dmp.DMP{
-		ReqId:     reqId,
+		ReqId:     uuid.New().String(),
 		Method:    dmp.Method,
 		Version:   dmp.Version,
-		Timestamp: timestamp,
+		Timestamp: time.Now().UnixNano() / 1e6,
 		BindName:  dmp.BindName,
 		Events:    events,
 	}
