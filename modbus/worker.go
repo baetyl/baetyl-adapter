@@ -35,6 +35,7 @@ func NewWorker(ctx dmcontext.Context, job Job, slave *Slave, log *log.Logger) *W
 
 func (w *Worker) Execute() error {
 	r := v1.Report{}
+	temp := make(map[string]interface{})
 	for _, m := range w.maps {
 		p, err := m.Collect()
 		if err != nil {
@@ -47,12 +48,10 @@ func (w *Worker) Execute() error {
 		if err != nil {
 			return err
 		}
-		r[m.cfg.Name] = pa
+		temp[m.cfg.Name] = pa
 	}
 
 	// add dmp field
-	reqId := uuid.New().String()
-	timestamp := time.Now().UnixNano() / 1e6
 	events := make(map[string]interface{})
 	bie := make(map[string]interface{})
 	accessTemplate, err := w.ctx.GetAccessTemplates(w.slave.dev)
@@ -71,20 +70,21 @@ func (w *Worker) Execute() error {
 			if err != nil {
 				return err
 			}
-			args[param] = r[mappingName]
+			args[param] = temp[mappingName]
 		}
 		modelValue, err := dmcontext.ExecExpression(model.Expression, args, model.Type)
 		if err != nil {
 			return err
 		}
 		bie[model.Attribute] = modelValue
+		r[model.Attribute] = modelValue
 	}
 	events[dmp.BIEKey] = bie
 	r[dmp.DMPKey] = dmp.DMP{
-		ReqId:     reqId,
+		ReqId:     uuid.New().String(),
 		Method:    dmp.Method,
 		Version:   dmp.Version,
-		Timestamp: timestamp,
+		Timestamp: time.Now().UnixNano() / 1e6,
 		BindName:  dmp.BindName,
 		Events:    events,
 	}

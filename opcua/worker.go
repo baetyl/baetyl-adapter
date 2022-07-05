@@ -31,6 +31,7 @@ func NewWorker(ctx dm.Context, job Job, device *Device, logger *log.Logger) *Wor
 
 func (w *Worker) Execute() error {
 	r := v1.Report{}
+	temp := make(map[string]interface{})
 	for _, p := range w.job.Properties {
 		val, err := w.read(p)
 		if err != nil {
@@ -42,7 +43,7 @@ func (w *Worker) Execute() error {
 			w.logger.Error("failed to parse", log.Error(err))
 			continue
 		}
-		r[p.Name] = value
+		temp[p.Name] = value
 	}
 
 	// add dmp filed
@@ -64,13 +65,14 @@ func (w *Worker) Execute() error {
 			if err != nil {
 				return err
 			}
-			args[param] = r[mappingName]
+			args[param] = temp[mappingName]
 		}
 		modelValue, err := dm.ExecExpression(model.Expression, args, model.Type)
 		if err != nil {
 			return err
 		}
 		bie[model.Attribute] = modelValue
+		r[model.Attribute] = modelValue
 	}
 	events[dmp.BIEKey] = bie
 	r[dmp.DMPKey] = dmp.DMP{
