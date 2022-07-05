@@ -1,10 +1,14 @@
 package opcua
 
 import (
+	"time"
+
+	"github.com/baetyl/baetyl-adapter/v2/dmp"
 	dm "github.com/baetyl/baetyl-go/v2/dmcontext"
 	"github.com/baetyl/baetyl-go/v2/errors"
 	"github.com/baetyl/baetyl-go/v2/log"
 	v1 "github.com/baetyl/baetyl-go/v2/spec/v1"
+	"github.com/google/uuid"
 	"github.com/gopcua/opcua/ua"
 )
 
@@ -40,6 +44,44 @@ func (w *Worker) Execute() error {
 		}
 		r[p.Name] = value
 	}
+
+	// add dmp filed
+	events := make(map[string]interface{})
+	bie := make(map[string]interface{})
+	accessTemplate, err := w.ctx.GetAccessTemplates(w.device.info)
+	if err != nil {
+		return err
+	}
+	for _, model := range accessTemplate.Mappings {
+		args := make(map[string]interface{})
+		params, err := dm.ParseExpression(model.Expression)
+		if err != nil {
+			return err
+		}
+		for _, param := range params {
+			id := param[1:]
+			mappingName, err := dmp.GetMappingName(id, accessTemplate)
+			if err != nil {
+				return err
+			}
+			args[param] = r[mappingName]
+		}
+		modelValue, err := dm.ExecExpression(model.Expression, args, model.Type)
+		if err != nil {
+			return err
+		}
+		bie[model.Attribute] = modelValue
+	}
+	events[dmp.BIEKey] = bie
+	r[dmp.DMPKey] = dmp.DMP{
+		ReqId:     uuid.New().String(),
+		Method:    dmp.Method,
+		Version:   dmp.Version,
+		Timestamp: time.Now().UnixNano() / 1e6,
+		BindName:  dmp.BindName,
+		Events:    events,
+	}
+
 	if err := w.ctx.ReportDeviceProperties(w.device.info, r); err != nil {
 		return err
 	}

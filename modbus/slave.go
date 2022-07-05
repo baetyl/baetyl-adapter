@@ -12,7 +12,7 @@ type Slave struct {
 	dev    *dm.DeviceInfo
 	ctx    dm.Context
 	cfg    SlaveConfig
-	fail  int
+	fail   int
 	status int
 }
 
