@@ -33,7 +33,6 @@ func GetMappingName(id string, template *dmcontext.AccessTemplate) (string, erro
 	}
 	if name == "" {
 		return "", errors.New("unknown property id")
-	} else {
-		return name, nil
 	}
+	return name, nil
 }
