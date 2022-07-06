@@ -1,9 +1,9 @@
 package opcua
 
 import (
-	"github.com/baetyl/baetyl-adapter/v2/dmp"
 	"time"
 
+	"github.com/baetyl/baetyl-adapter/v2/dmp"
 	"github.com/baetyl/baetyl-go/v2/context"
 	dm "github.com/baetyl/baetyl-go/v2/dmcontext"
 	"github.com/baetyl/baetyl-go/v2/errors"
