@@ -1,7 +1,6 @@
 package dmp
 
 import (
-	"encoding/json"
 	"strconv"
 
 	"github.com/baetyl/baetyl-go/v2/dmcontext"
@@ -95,45 +94,17 @@ func parseValueToFloat64(v interface{}) (float64, error) {
 	}
 }
 
-func ParsePropertyValue(tpy string, val interface{}) (interface{}, error) {
-	// it is json.Number (string actually) when val is number
+func ParsePropertyValue(tpy string, val float64) (interface{}, error) {
 	switch tpy {
 	case dmcontext.TypeInt16:
-		num, _ := val.(json.Number)
-		i, err := strconv.ParseInt(num.String(), 10, 16)
-		if err != nil {
-			return nil, errors.Trace(err)
-		}
-		return int16(i), nil
+		return int16(val), nil
 	case dmcontext.TypeInt32:
-		num, _ := val.(json.Number)
-		i, err := strconv.ParseInt(num.String(), 10, 32)
-		if err != nil {
-			return nil, errors.Trace(err)
-		}
-		return int32(i), nil
+		return int32(val), nil
 	case dmcontext.TypeInt64:
-		num, _ := val.(json.Number)
-		i, err := strconv.ParseInt(num.String(), 10, 64)
-		if err != nil {
-			return nil, errors.Trace(err)
-		}
-		return i, nil
+		return int64(val), nil
 	case dmcontext.TypeFloat32:
-		num, _ := val.(json.Number)
-		f, err := strconv.ParseFloat(num.String(), 32)
-		if err != nil {
-			return nil, errors.Trace(err)
-		}
-		return float32(f), nil
+		return float32(val), nil
 	case dmcontext.TypeFloat64:
-		num, _ := val.(json.Number)
-		f, err := strconv.ParseFloat(num.String(), 64)
-		if err != nil {
-			return nil, errors.Trace(err)
-		}
-		return f, nil
-	case dmcontext.TypeBool, dmcontext.TypeString:
 		return val, nil
 	default:
 		return nil, errors.Trace(dmcontext.ErrTypeNotSupported)
