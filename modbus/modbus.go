@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/baetyl/baetyl-adapter/v2/dmp"
 	dm "github.com/baetyl/baetyl-go/v2/dmcontext"
 	"github.com/baetyl/baetyl-go/v2/errors"
 	v2log "github.com/baetyl/baetyl-go/v2/log"
@@ -83,6 +84,11 @@ func (mod *Modbus) DeltaCallback(info *dm.DeviceInfo, prop v1.Delta) error {
 		mod.log.Warn("worker not exist according to device", v2log.Any("device", info.Name))
 		return ErrWorkerNotExist
 	}
+	accessTemplate, err := mod.ctx.GetAccessTemplates(info)
+	if err != nil {
+		mod.log.Warn("get access template err", v2log.Any("device", info.Name))
+		return err
+	}
 	ms := map[string]MapConfig{}
 	for _, m := range w.job.Maps {
 		ms[m.Name] = m
@@ -93,14 +99,36 @@ func (mod *Modbus) DeltaCallback(info *dm.DeviceInfo, prop v1.Delta) error {
 			mod.log.Warn("did not find slave to write", v2log.Any("slave id", w.job.SlaveID))
 			continue
 		}
-		cfg, ok := ms[name]
-		if !ok {
-			mod.log.Warn("did not find prop", v2log.Any("name", name))
+		// support model Number-setting
+		id, err := dmp.GetConfigIdByModelName(name, accessTemplate)
+		if id == "" || err != nil {
+			mod.log.Warn("prop not exist", v2log.Any("name", name))
 			continue
 		}
-		bs, err := transform(val, cfg)
+		propName, err := dmp.GetMappingName(id, accessTemplate)
 		if err != nil {
-			mod.log.Warn("ignore illegal data type of val", v2log.Any("value", val), v2log.Any("type", cfg.Type), v2log.Error(err))
+			mod.log.Warn("prop name not exist", v2log.Any("id", id))
+			continue
+		}
+		propVal, err := dmp.GetPropValueByModelName(name, val, accessTemplate)
+		if err != nil {
+			mod.log.Warn("get prop value err", v2log.Any("name", propName))
+			continue
+		}
+
+		cfg, ok := ms[propName]
+		if !ok {
+			mod.log.Warn("did not find prop", v2log.Any("name", propName))
+			continue
+		}
+		value, err := dmp.ParsePropertyValue(cfg.Type, propVal)
+		if err != nil {
+			mod.log.Warn("parse property value err", v2log.Error(err))
+			continue
+		}
+		bs, err := transform(value, cfg)
+		if err != nil {
+			mod.log.Warn("ignore illegal data type of value", v2log.Any("value", value), v2log.Any("type", cfg.Type), v2log.Error(err))
 			continue
 		}
 		switch cfg.Function {

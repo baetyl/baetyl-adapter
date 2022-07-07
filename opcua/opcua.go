@@ -3,6 +3,7 @@ package opcua
 import (
 	"time"
 
+	"github.com/baetyl/baetyl-adapter/v2/dmp"
 	"github.com/baetyl/baetyl-go/v2/context"
 	dm "github.com/baetyl/baetyl-go/v2/dmcontext"
 	"github.com/baetyl/baetyl-go/v2/errors"
@@ -100,10 +101,36 @@ func (o *Opcua) DeltaCallback(info *dm.DeviceInfo, delta v1.Delta) error {
 		o.log.Warn("worker not exist according to device", v2log.Any("device", info.Name))
 		return ErrWorkerNotExist
 	}
+	accessTemplate, err := w.ctx.GetAccessTemplates(info)
+	if err != nil {
+		o.log.Warn("get access template err", v2log.Any("device", info.Name))
+		return err
+	}
 	for key, val := range delta {
+		// support model Number-setting
+		id, err := dmp.GetConfigIdByModelName(key, accessTemplate)
+		if id == "" || err != nil {
+			o.log.Warn("prop not exist", v2log.Any("name", key))
+			continue
+		}
+		propName, err := dmp.GetMappingName(id, accessTemplate)
+		if err != nil {
+			o.log.Warn("prop name not exist", v2log.Any("id", id))
+			continue
+		}
+		propVal, err := dmp.GetPropValueByModelName(key, val, accessTemplate)
+		if err != nil {
+			o.log.Warn("get prop value err", v2log.Any("name", propName))
+			continue
+		}
+
 		for _, prop := range w.job.Properties {
-			if key == prop.Name {
-				variant, err := ua.NewVariant(val)
+			if propName == prop.Name {
+				value, err := dmp.ParsePropertyValue(prop.Type, propVal)
+				if err != nil {
+					return errors.Trace(err)
+				}
+				variant, err := ua.NewVariant(value)
 				if err != nil {
 					return errors.Trace(err)
 				}
