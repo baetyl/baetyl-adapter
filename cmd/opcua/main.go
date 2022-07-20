@@ -2,12 +2,12 @@ package main
 
 import (
     "fmt"
-    dm "github.com/baetyl/baetyl-go/v2/dmcontext"
-    "github.com/baetyl/baetyl-go/v2/utils"
-    "github.com/jinzhu/copier"
     "strconv"
 
     "github.com/baetyl/baetyl-adapter/v2/opcua"
+    dm "github.com/baetyl/baetyl-go/v2/dmcontext"
+    "github.com/baetyl/baetyl-go/v2/utils"
+    "github.com/jinzhu/copier"
 )
 
 func main() {
@@ -51,7 +51,7 @@ func genConfig(ctx dm.Context) (*opcua.Config, error) {
             for _, prop := range deviceTemplate.Properties {
                 if visitor := prop.Visitor.Opcua; visitor != nil {
                     var nodeId string
-                    ns := deviceInfo.AccessConfig.Opcua.NsOffset+visitor.NsBase
+                    ns := deviceInfo.AccessConfig.Opcua.NsOffset + visitor.NsBase
                     switch visitor.IdType {
                     case opcua.NUMERIC:
                         idBase, err := strconv.Atoi(visitor.IdBase)
@@ -67,8 +67,8 @@ func genConfig(ctx dm.Context) (*opcua.Config, error) {
                         nodeId = fmt.Sprintf("ns=%d;b=%s", ns, visitor.IdBase)
                     }
                     jobProps = append(jobProps, opcua.Property{
-                        Name: prop.Name,
-                        Type: visitor.Type,
+                        Name:   prop.Name,
+                        Type:   visitor.Type,
                         NodeID: nodeId,
                     })
                 }
