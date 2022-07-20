@@ -60,7 +60,7 @@ func genConfig(ctx dm.Context) (*opcua.Config, error) {
                         }
                         nodeId = fmt.Sprintf("ns=%d;i=%d", ns, deviceInfo.AccessConfig.Opcua.IdOffset+idBase)
                     case dm.OpcuaIdTypeS, dm.OpcuaIdTypeG, dm.OpcuaIdTypeB:
-                        nodeId = fmt.Sprintf("ns=%d;s=%s", ns, visitor.IdBase)
+                        nodeId = fmt.Sprintf("ns=%d;%s=%s", ns, visitor.IdType, visitor.IdBase)
                     default:
                         continue
                     }
