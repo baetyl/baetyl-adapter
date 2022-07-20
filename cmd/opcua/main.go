@@ -53,18 +53,16 @@ func genConfig(ctx dm.Context) (*opcua.Config, error) {
                     var nodeId string
                     ns := deviceInfo.AccessConfig.Opcua.NsOffset + visitor.NsBase
                     switch visitor.IdType {
-                    case opcua.NUMERIC:
+                    case dm.OpcuaIdTypeI:
                         idBase, err := strconv.Atoi(visitor.IdBase)
                         if err != nil {
                             continue
                         }
                         nodeId = fmt.Sprintf("ns=%d;i=%d", ns, deviceInfo.AccessConfig.Opcua.IdOffset+idBase)
-                    case opcua.STRING:
+                    case dm.OpcuaIdTypeS, dm.OpcuaIdTypeG, dm.OpcuaIdTypeB:
                         nodeId = fmt.Sprintf("ns=%d;s=%s", ns, visitor.IdBase)
-                    case opcua.GUID:
-                        nodeId = fmt.Sprintf("ns=%d;g=%s", ns, visitor.IdBase)
-                    case opcua.OPAQUE:
-                        nodeId = fmt.Sprintf("ns=%d;b=%s", ns, visitor.IdBase)
+                    default:
+                        continue
                     }
                     jobProps = append(jobProps, opcua.Property{
                         Name:   prop.Name,
