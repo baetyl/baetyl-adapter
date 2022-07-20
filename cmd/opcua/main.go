@@ -1,9 +1,11 @@
 package main
 
 import (
+    "fmt"
     dm "github.com/baetyl/baetyl-go/v2/dmcontext"
     "github.com/baetyl/baetyl-go/v2/utils"
     "github.com/jinzhu/copier"
+    "strconv"
 
     "github.com/baetyl/baetyl-adapter/v2/opcua"
 )
@@ -48,10 +50,26 @@ func genConfig(ctx dm.Context) (*opcua.Config, error) {
         if deviceTemplate != nil && deviceTemplate.Properties != nil && len(deviceTemplate.Properties) > 0 {
             for _, prop := range deviceTemplate.Properties {
                 if visitor := prop.Visitor.Opcua; visitor != nil {
+                    var nodeId string
+                    ns := deviceInfo.AccessConfig.Opcua.NsOffset+visitor.NsBase
+                    switch visitor.IdType {
+                    case opcua.NUMERIC:
+                        idBase, err := strconv.Atoi(visitor.IdBase)
+                        if err != nil {
+                            continue
+                        }
+                        nodeId = fmt.Sprintf("ns=%d;i=%d", ns, deviceInfo.AccessConfig.Opcua.IdOffset+idBase)
+                    case opcua.STRING:
+                        nodeId = fmt.Sprintf("ns=%d;s=%s", ns, visitor.IdBase)
+                    case opcua.GUID:
+                        nodeId = fmt.Sprintf("ns=%d;g=%s", ns, visitor.IdBase)
+                    case opcua.OPAQUE:
+                        nodeId = fmt.Sprintf("ns=%d;b=%s", ns, visitor.IdBase)
+                    }
                     jobProps = append(jobProps, opcua.Property{
-                        Name:   prop.Name,
-                        Type:   visitor.Type,
-                        NodeID: visitor.NodeID,
+                        Name: prop.Name,
+                        Type: visitor.Type,
+                        NodeID: nodeId,
                     })
                 }
             }

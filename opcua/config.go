@@ -4,6 +4,13 @@ import (
 	"time"
 )
 
+const (
+	NUMERIC = "i"
+	STRING  = "s"
+	GUID    = "g"
+	OPAQUE  = "b"
+)
+
 type Config struct {
 	Devices []DeviceConfig `yaml:"devices" json:"devices"`
 	Jobs    []Job          `yaml:"jobs" json:"jobs"`
