@@ -126,7 +126,13 @@ func (o *Opcua) DeltaCallback(info *dm.DeviceInfo, delta v1.Delta) error {
 
 		for _, prop := range w.job.Properties {
 			if propName == prop.Name {
-				value, err := dmp.ParsePropertyValue(prop.Type, propVal)
+				var value interface{}
+				switch propVal.(type) {
+				case float64:
+					value, err = dmp.ParsePropertyValue(prop.Type, propVal.(float64))
+				default:
+					value = propVal
+				}
 				if err != nil {
 					return errors.Trace(err)
 				}

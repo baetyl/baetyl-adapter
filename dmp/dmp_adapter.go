@@ -54,24 +54,24 @@ func GetConfigIdByModelName(name string, template *dmcontext.AccessTemplate) (st
 	return "", errors.New("config id not exist")
 }
 
-func GetPropValueByModelName(name string, val interface{}, template *dmcontext.AccessTemplate) (float64, error) {
+func GetPropValueByModelName(name string, val interface{}, template *dmcontext.AccessTemplate) (interface{}, error) {
 	for _, modelMapping := range template.Mappings {
 		if modelMapping.Attribute == name {
+			if modelMapping.Type == dmcontext.MappingValue {
+				return val, nil
+			}
 			value, err := parseValueToFloat64(val)
 			if err != nil {
-				return 0.0, err
-			}
-			if modelMapping.Type == dmcontext.MappingValue {
-				return value, nil
+				return nil, err
 			}
 			propVal, err := dmcontext.SolveExpression(modelMapping.Expression, value)
 			if err != nil {
-				return 0.0, err
+				return nil, err
 			}
 			return propVal, nil
 		}
 	}
-	return 0.0, errors.New("prop value not exist")
+	return nil, errors.New("prop value not exist")
 }
 
 func parseValueToFloat64(v interface{}) (float64, error) {
