@@ -121,7 +121,14 @@ func (mod *Modbus) DeltaCallback(info *dm.DeviceInfo, prop v1.Delta) error {
 			mod.log.Warn("did not find prop", v2log.Any("name", propName))
 			continue
 		}
-		value, err := dmp.ParsePropertyValue(cfg.Type, propVal)
+
+		var value interface{}
+		switch propVal.(type) {
+		case float64:
+			value, err = dmp.ParsePropertyValue(cfg.Type, propVal.(float64))
+		default:
+			value = propVal
+		}
 		if err != nil {
 			mod.log.Warn("parse property value err", v2log.Error(err))
 			continue
