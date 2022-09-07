@@ -6,11 +6,12 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/baetyl/baetyl-adapter/v2/dmp"
 	dm "github.com/baetyl/baetyl-go/v2/dmcontext"
 	"github.com/baetyl/baetyl-go/v2/errors"
 	v2log "github.com/baetyl/baetyl-go/v2/log"
 	v1 "github.com/baetyl/baetyl-go/v2/spec/v1"
+
+	"github.com/baetyl/baetyl-adapter/v2/dmp"
 )
 
 var (
@@ -73,6 +74,9 @@ func NewModbus(ctx dm.Context, cfg Config) (*Modbus, error) {
 		return nil, err
 	}
 	if err := ctx.RegisterEventCallback(mod.EventCallback); err != nil {
+		return nil, err
+	}
+	if err := ctx.RegisterGetLatestCallback(mod.GetLatestCallback); err != nil {
 		return nil, err
 	}
 	return mod, nil
@@ -168,6 +172,18 @@ func (mod *Modbus) EventCallback(info *dm.DeviceInfo, event *dm.Event) error {
 		}
 	default:
 		return errors.New("event type not supported yet")
+	}
+	return nil
+}
+
+func (mod *Modbus) GetLatestCallback(info *dm.DeviceInfo) error {
+	w, ok := mod.ws[info.Name]
+	if !ok {
+		mod.log.Warn("worker not exist according to device", v2log.Any("device", info.Name))
+		return ErrWorkerNotExist
+	}
+	if err := w.Execute(); err != nil {
+		return err
 	}
 	return nil
 }
