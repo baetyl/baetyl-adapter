@@ -580,3 +580,31 @@ func (mr *MockContextMockRecorder) WaitChan() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "WaitChan", reflect.TypeOf((*MockContext)(nil).WaitChan))
 }
+
+// RegisterGetLatestCallback mocks base method.
+func (m *MockContext) RegisterGetLatestCallback(arg0 dmcontext.GetLatestCallback) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "RegisterGetLatestCallback", arg0)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// RegisterGetLatestCallback indicates an expected call of RegisterGetLatestCallback.
+func (mr *MockContextMockRecorder) RegisterGetLatestCallback(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RegisterGetLatestCallback", reflect.TypeOf((*MockContext)(nil).RegisterGetLatestCallback), arg0)
+}
+
+// ReportDeviceEvents mocks base method.
+func (m *MockContext) ReportDeviceEvents(arg0 *dmcontext.DeviceInfo, arg1 v1.EventReport) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "ReportDeviceEvents", arg0, arg1)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// ReportDeviceEvents indicates an expected call of ReportDeviceEvents.
+func (mr *MockContextMockRecorder) ReportDeviceEvents(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ReportDeviceEvents", reflect.TypeOf((*MockContext)(nil).ReportDeviceEvents), arg0, arg1)
+}

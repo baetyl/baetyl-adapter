@@ -3,7 +3,6 @@ package opcua
 import (
 	"time"
 
-	"github.com/baetyl/baetyl-adapter/v2/dmp"
 	"github.com/baetyl/baetyl-go/v2/context"
 	dm "github.com/baetyl/baetyl-go/v2/dmcontext"
 	"github.com/baetyl/baetyl-go/v2/errors"
@@ -11,6 +10,8 @@ import (
 	mqtt2 "github.com/baetyl/baetyl-go/v2/mqtt"
 	v1 "github.com/baetyl/baetyl-go/v2/spec/v1"
 	"github.com/gopcua/opcua/ua"
+
+	"github.com/baetyl/baetyl-adapter/v2/dmp"
 )
 
 var (
@@ -65,6 +66,10 @@ func NewOpcua(ctx dm.Context, cfg Config) (*Opcua, error) {
 		return nil, err
 	}
 	err = ctx.RegisterEventCallback(o.EventCallback)
+	if err != nil {
+		return nil, err
+	}
+	err = ctx.RegisterGetLatestCallback(o.GetLatestCallback)
 	if err != nil {
 		return nil, err
 	}
@@ -176,6 +181,18 @@ func (o *Opcua) EventCallback(info *dm.DeviceInfo, event *dm.Event) error {
 		}
 	default:
 		return errors.New("event type not supported yet")
+	}
+	return nil
+}
+
+func (o *Opcua) GetLatestCallback(info *dm.DeviceInfo) error {
+	w, ok := o.ws[info.Name]
+	if !ok {
+		o.log.Warn("worker not exist according to device", v2log.Any("device", info.Name))
+		return ErrWorkerNotExist
+	}
+	if err := w.Execute(); err != nil {
+		return err
 	}
 	return nil
 }
