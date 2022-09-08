@@ -76,7 +76,7 @@ func NewModbus(ctx dm.Context, cfg Config) (*Modbus, error) {
 	if err := ctx.RegisterEventCallback(mod.EventCallback); err != nil {
 		return nil, err
 	}
-	if err := ctx.RegisterGetLatestCallback(mod.GetLatestCallback); err != nil {
+	if err := ctx.RegisterPropertyGetCallback(mod.PropertyGetCallback); err != nil {
 		return nil, err
 	}
 	return mod, nil
@@ -176,7 +176,7 @@ func (mod *Modbus) EventCallback(info *dm.DeviceInfo, event *dm.Event) error {
 	return nil
 }
 
-func (mod *Modbus) GetLatestCallback(info *dm.DeviceInfo) error {
+func (mod *Modbus) PropertyGetCallback(info *dm.DeviceInfo, properties []string) error {
 	w, ok := mod.ws[info.Name]
 	if !ok {
 		mod.log.Warn("worker not exist according to device", v2log.Any("device", info.Name))
