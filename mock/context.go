@@ -581,18 +581,18 @@ func (mr *MockContextMockRecorder) WaitChan() *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "WaitChan", reflect.TypeOf((*MockContext)(nil).WaitChan))
 }
 
-// RegisterGetLatestCallback mocks base method.
-func (m *MockContext) RegisterGetLatestCallback(arg0 dmcontext.GetLatestCallback) error {
+// RegisterPropertyGetCallback mocks base method.
+func (m *MockContext) RegisterPropertyGetCallback(arg0 dmcontext.PropertyGetCallback) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "RegisterGetLatestCallback", arg0)
+	ret := m.ctrl.Call(m, "RegisterPropertyGetCallback", arg0)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
-// RegisterGetLatestCallback indicates an expected call of RegisterGetLatestCallback.
-func (mr *MockContextMockRecorder) RegisterGetLatestCallback(arg0 interface{}) *gomock.Call {
+// RegisterPropertyGetCallback indicates an expected call of RegisterPropertyGetCallback.
+func (mr *MockContextMockRecorder) RegisterPropertyGetCallback(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RegisterGetLatestCallback", reflect.TypeOf((*MockContext)(nil).RegisterGetLatestCallback), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RegisterPropertyGetCallback", reflect.TypeOf((*MockContext)(nil).RegisterPropertyGetCallback), arg0)
 }
 
 // ReportDeviceEvents mocks base method.
