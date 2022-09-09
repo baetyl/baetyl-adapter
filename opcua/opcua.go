@@ -69,7 +69,7 @@ func NewOpcua(ctx dm.Context, cfg Config) (*Opcua, error) {
 	if err != nil {
 		return nil, err
 	}
-	err = ctx.RegisterGetLatestCallback(o.GetLatestCallback)
+	err = ctx.RegisterPropertyGetCallback(o.PropertyGetCallback)
 	if err != nil {
 		return nil, err
 	}
@@ -185,7 +185,7 @@ func (o *Opcua) EventCallback(info *dm.DeviceInfo, event *dm.Event) error {
 	return nil
 }
 
-func (o *Opcua) GetLatestCallback(info *dm.DeviceInfo) error {
+func (o *Opcua) PropertyGetCallback(info *dm.DeviceInfo, properties []string) error {
 	w, ok := o.ws[info.Name]
 	if !ok {
 		o.log.Warn("worker not exist according to device", v2log.Any("device", info.Name))
