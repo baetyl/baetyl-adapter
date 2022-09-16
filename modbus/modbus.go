@@ -40,6 +40,7 @@ func NewModbus(ctx dm.Context, cfg Config) (*Modbus, error) {
 		err = client.Connect()
 		if err != nil {
 			log.Warn("connect failed", v2log.Any("slave id", slaveConfig.Id), v2log.Error(err))
+			continue
 		}
 		dev, ok := devMap[slaveConfig.Device]
 		if !ok {
@@ -101,6 +102,10 @@ func (mod *Modbus) DeltaCallback(info *dm.DeviceInfo, prop v1.Delta) error {
 		slave, ok := mod.slaves[w.job.SlaveID]
 		if !ok {
 			mod.log.Warn("did not find slave to write", v2log.Any("slave id", w.job.SlaveID))
+			continue
+		}
+		if slave.client.Client == nil {
+			mod.log.Warn("slave client is nil", v2log.Any("slave id", w.job.SlaveID))
 			continue
 		}
 		// support model Number-setting
