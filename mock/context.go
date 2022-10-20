@@ -503,6 +503,19 @@ func (mr *MockContextMockRecorder) ReportDeviceProperties(arg0, arg1 interface{}
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ReportDeviceProperties", reflect.TypeOf((*MockContext)(nil).ReportDeviceProperties), arg0, arg1)
 }
 
+func (m *MockContext) ReportDevicePropertiesWithFilter(arg0 *dmcontext.DeviceInfo, arg1 v1.Report) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "ReportDevicePropertiesWithFilter", arg0, arg1)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// ReportDevicePropertiesWithFilter indicates an expected call of ReportDeviceProperties.
+func (mr *MockContextMockRecorder) ReportDevicePropertiesWithFilter(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ReportDevicePropertiesWithFilter", reflect.TypeOf((*MockContext)(nil).ReportDevicePropertiesWithFilter), arg0, arg1)
+}
+
 // ServiceName mocks base method.
 func (m *MockContext) ServiceName() string {
 	m.ctrl.T.Helper()
