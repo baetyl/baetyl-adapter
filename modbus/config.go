@@ -1,15 +1,15 @@
 package modbus
 
 import (
-	"errors"
 	"fmt"
 	"time"
 
-	"gopkg.in/validator.v2"
+	"github.com/baetyl/baetyl-go/v2/utils"
+	"github.com/go-playground/validator/v10"
 )
 
 func init() {
-	validator.SetValidationFunc("validjobs", validateJobs)
+	utils.RegisterValidation("validjobs", validateJobs)
 }
 
 // Config custom configuration of the timer module
@@ -90,22 +90,25 @@ type Publish struct {
 	Topic string `yaml:"topic" json:"topic" default:"timer" validate:"nonzero"`
 }
 
-func validateJobs(v interface{}, param string) error {
-	jobs, ok := v.([]Job)
-	if !ok {
-		return errors.New("only support job array")
-	}
-	for _, job := range jobs {
+func validateJobs(fl validator.FieldLevel) bool {
+	for i := 0; i < fl.Field().Len(); i++ {
+		job, ok := fl.Field().Index(i).Interface().(Job)
+		if !ok {
+			println("only support job array")
+			return false
+		}
 		for _, m := range job.Maps {
 			if _, ok := SysName[m.Name]; ok {
-				return fmt.Errorf("please use another name, '%s' is reserved by the system", m.Name)
+				println(fmt.Sprintf("please use another name, '%s' is reserved by the system", m.Name))
+				return false
 			}
 			if _, ok := SysType[m.Type]; !ok {
-				return fmt.Errorf("unsupported field type: %s", m.Type)
+				println(fmt.Sprintf("unsupported field type: %s", m.Type))
+				return false
 			}
 		}
 	}
-	return nil
+	return true
 }
 
 func (job *Job) SetDefaults() {
