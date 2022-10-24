@@ -374,6 +374,21 @@ func (mr *MockContextMockRecorder) NewBrokerClient(arg0 interface{}) *gomock.Cal
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "NewBrokerClient", reflect.TypeOf((*MockContext)(nil).NewBrokerClient), arg0)
 }
 
+// NewCoreHttpClient mocks base method.
+func (m *MockContext) NewCoreHttpClient() (*http.Client, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "NewCoreHttpClient")
+	ret0, _ := ret[0].(*http.Client)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// NewCoreHttpClient indicates an expected call of NewCoreHttpClient.
+func (mr *MockContextMockRecorder) NewCoreHttpClient() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "NewCoreHttpClient", reflect.TypeOf((*MockContext)(nil).NewCoreHttpClient))
+}
+
 // NewFunctionHttpClient mocks base method.
 func (m *MockContext) NewFunctionHttpClient() (*http.Client, error) {
 	m.ctrl.T.Helper()
@@ -501,6 +516,20 @@ func (m *MockContext) ReportDeviceProperties(arg0 *dmcontext.DeviceInfo, arg1 v1
 func (mr *MockContextMockRecorder) ReportDeviceProperties(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ReportDeviceProperties", reflect.TypeOf((*MockContext)(nil).ReportDeviceProperties), arg0, arg1)
+}
+
+// ReportDevicePropertiesWithFilter mocks base method.
+func (m *MockContext) ReportDevicePropertiesWithFilter(arg0 *dmcontext.DeviceInfo, arg1 v1.Report) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "ReportDevicePropertiesWithFilter", arg0, arg1)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// ReportDevicePropertiesWithFilter indicates an expected call of ReportDevicePropertiesWithFilter.
+func (mr *MockContextMockRecorder) ReportDevicePropertiesWithFilter(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ReportDevicePropertiesWithFilter", reflect.TypeOf((*MockContext)(nil).ReportDevicePropertiesWithFilter), arg0, arg1)
 }
 
 // ServiceName mocks base method.
