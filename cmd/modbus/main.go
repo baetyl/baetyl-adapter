@@ -62,7 +62,7 @@ func genConfig(ctx dm.Context) (*modbus.Config, error) {
 		if deviceTemplate != nil && deviceTemplate.Properties != nil && len(deviceTemplate.Properties) > 0 {
 			for _, prop := range deviceTemplate.Properties {
 				if visitor := prop.Visitor.Modbus; visitor != nil {
-					address, _ := strconv.ParseUint(visitor.Address[2:], 10, 16)
+					address, _ := strconv.ParseUint(visitor.Address[2:], 16, 16)
 					m := modbus.MapConfig{
 						Id:           prop.Id,
 						Name:         prop.Name,
